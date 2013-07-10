@@ -13,12 +13,21 @@ enum COMMANDS
 
 class Command
 {
-private:	
-	int    checkSize(int size);
+private:		
 	unsigned int valueToBytes(double value);
+	unsigned int valueToBytes(double value, int bits);
+	float bytesToValue(unsigned int bytes);
+	float bytesToValue (unsigned int bytes, int bits);
+	
+	int          checkSize(int size);	
 	
 public:    
+	int    checkSize(char size);
     char * writeVariable(int address, int size, int id, double value, int * bytesToWrite);    
+    char * readVariable(int address, int id, int * bytesToWrite);
+    double readingVariable(char * header, char * payload);
+    char * writeCurveBlock(int address, int size, int id, int offset, epicsFloat64 * values, size_t nElements, int * bytesToWrite);
+    
 };
 
 #endif

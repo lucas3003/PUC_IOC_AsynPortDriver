@@ -10,13 +10,18 @@
 #define P_ValueString   "VALUE"
 #define P_TypeString    "TYPE"
 #define P_SizeString    "SIZE"
+#define P_OffsetString  "OFFSET"
 
 
 class PortConnect : public asynPortDriver
 {
 public:
     PortConnect(const char *portName, const char *serialName);
+    
     virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
+    virtual asynStatus readFloat64(asynUser* pasynUser, epicsFloat64* value);
+    
+    virtual asynStatus writeFloat64Array(asynUser* pasynUser, epicsFloat64* value, size_t nElements);
     
 protected:
 	int P_Address;
@@ -24,9 +29,9 @@ protected:
 	int P_Value;
 	int P_Type;
 	int P_Size;
+	int P_Offset;
 
 private:
-
 	Command com;
 	asynUser* user;
 };
