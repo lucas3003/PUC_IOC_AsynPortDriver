@@ -1,0 +1,7 @@
+record(ao, "test")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT, "@asyn($(PORT), 0, 5)TEST")
+   field(SCAN, "Passive")
+}
