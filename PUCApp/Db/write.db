@@ -1,0 +1,45 @@
+record(ao, "address")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT, "@asyn($(PORT), 0, 5)ADDRESS")
+   field(VAL, "$(ADDRESS_VAL)")
+   field(SCAN, "Passive")
+}
+
+record(ao, "id")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT, "@asyn($(PORT), 0, 5)ID")
+   field(VAL, "$(ID_VAL)")
+   field(SCAN, "Passive")   
+}
+
+record(ao, "value")
+{
+    field(PINI, "0")
+    field(DTYP, "asynFloat64")
+    field(OUT,  "@asyn($(PORT),0,5)VALUE")
+    field(VAL, "$(VALUE_VAL)")
+    field(SCAN, "Passive")
+}
+
+record(bo, "type")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT, "@asyn($(PORT), 0, 5)TYPE")
+   field(ZNAM, "Read")
+   field(ONAM, "Write")
+   field(VAL, "$(TYPE_VAL)")
+}
+
+record(ao, "size")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT, "@asyn($(PORT), 0, 5)SIZE")
+   field(VAL, "$(SIZE_VAL)")
+   field(SCAN, "Passive")
+}
