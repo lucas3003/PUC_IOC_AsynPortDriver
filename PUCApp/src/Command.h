@@ -26,6 +26,8 @@ public:
     char * writeVariable(int address, int size, int id, double value, int * bytesToWrite);    
     char * readVariable(int address, int id, int * bytesToWrite);
     double readingVariable(char * header, char * payload);
+    double* readingCurve(char * packet);
+    char * readCurve(int address, int size, int id, int offset, int * bytesToWrite);
     char * writeCurveBlock(int address, int size, int id, int offset, epicsFloat64 * values, size_t nElements, int * bytesToWrite);
     
 };

@@ -76,6 +76,36 @@ double Command :: readingVariable(char * header, char * payload)
 	
 }
 
+double * Command :: readingCurve(char * packet)
+{
+	/*
+	   Payload: Byte 4 to byte 16389
+	   Points by offset: 8192
+        */
+	printf("Reading curve\n");
+
+	double * result;
+	int i, j, iresult=0;
+	unsigned int temp = 0;
+
+	result = (double*) malloc(8192*sizeof(double));
+
+	for(i = 4; i < 16390; i+=2)
+	{
+		temp = 0;
+
+		for(j = 0; j < 2; j++)
+ 		{
+			temp = temp << 8;
+			temp += packet[i+j];			
+		}
+
+		result[iresult++] = bytesToValue(temp & 0xFFFF, 16);
+	}
+
+	return result;
+}
+
 char * Command :: readVariable(int address, int id, int * bytesToWrite)
 {
 	char * result;
@@ -105,13 +135,44 @@ char * Command :: readVariable(int address, int id, int * bytesToWrite)
 	
 	printf("Send: %d | %d | %d | %d | %d | %u\n", result[0], result[1], result[2], result[3], result[4], result[5] & 0xFF);	
 	
+	fflush(stdout);
 	return result;
+}
+
+char * Command :: readCurve(int address, int size, int id, int offset, int * bytesToWrite)
+{
+	/*
+	   Packet: Address (1 byte), origin (1 byte), command (1 byte), size (1 byte), payload (2 bytes),
+	   checksum (1 byte)
+	*/
+
+	char * result;
+	unsigned int check = 0;
+	int i;
+	result = (char *) malloc (7*sizeof(char));
+	*bytesToWrite = 7*sizeof(char);
+
+	result[0] = address & 0xFF;
+ 	result[1] = 0;
+	result[2] = TRANSMIT_BLOCK_CURVE;
+	result[3] = checkSize(size);
+	result[4] = id & 0xFF;
+	result[5] = offset & 0xFF;
+
+	for(i = 0; i <= 5; i++) check += result[i];
+
+	result[6] = 0x100 - (check & 0xFF);
+
+	printf("Send: %d | %d | %d | %d | %d | %d | %u\n", result[0], result[1], result[2], result[3], result[4], result[5], result[6]&0xFF);
+
+	fflush(stdout);
+	return result;	
 }
 
 char * Command :: writeCurveBlock(int address, int size, int id, int offset, epicsFloat64 * values, size_t nElements, int * bytesToWrite)
 {
 	/*
-	   Packet: Address (1 byte), origin (1 byte), command (1 byte), size(1 byte),
+	   Packet: Address (1 byte), origin (1 byte), command (1 byte), size (1 byte),
 	   payload (size bytes), checksum (1 byte)	
 	*/
 	
