@@ -19,6 +19,8 @@ PortConnect::PortConnect(const char* portName, const char * serialName) : asynPo
    
    if(status == asynSuccess) printf("Success: Connect to port\n");   
    else printf("Error: Connect to port");   
+
+   timeout = 5000;
    
    pasynOctetSyncIO->flush(user);   
 }
@@ -64,7 +66,7 @@ asynStatus PortConnect :: readFloat64(asynUser* pasynUser, epicsFloat64* value)
 		
 		if (write[0] == 0) return asynSuccess;
 		
-		status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
+		status = pasynOctetSyncIO->write(user, write, bytesToWrite, timeout, &wrote);
 		
 		if(status != asynSuccess) return status;
 		
@@ -81,16 +83,17 @@ asynStatus PortConnect :: readFloat64(asynUser* pasynUser, epicsFloat64* value)
 		header = (char *) malloc(4*sizeof(char));
 		
 		printf("Reading\n");
-		status = pasynOctetSyncIO->read(user, header, 4, 5000, &bytesRead, &eomReason);		
+		status = pasynOctetSyncIO->read(user, header, 4, timeout, &bytesRead, &eomReason);		
 		if(status != asynSuccess) return status;
 				
 		size = com.checkSize(header[3]);
 		payload = (char *) malloc((size+1)*sizeof(char));
 		
-		status = pasynOctetSyncIO->read(user, payload, size+1, 5000, &bytesRead, &eomReason);
+		status = pasynOctetSyncIO->read(user, payload, size+1, timeout, &bytesRead, &eomReason);
 		if(status != asynSuccess) return status;
 		
 		
+		//TODO: Check the checksum
 		*value = com.readingVariable(header, payload);
 	}	
 	
@@ -98,6 +101,8 @@ asynStatus PortConnect :: readFloat64(asynUser* pasynUser, epicsFloat64* value)
 	
 }
 
+//Request and read a curve from PUC.
+//Override method from AsynPortDriver
 asynStatus PortConnect :: readFloat64Array(asynUser *pasynUser, epicsFloat64 *value, size_t nElements, size_t *nIn)
 {
 	printf("readFloat64Array\n");
@@ -116,22 +121,23 @@ asynStatus PortConnect :: readFloat64Array(asynUser *pasynUser, epicsFloat64 *va
 	
 	printf("Bytes to write: %d\n", bytesToWrite);
 
-	status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
+	status = pasynOctetSyncIO->write(user, write, bytesToWrite, timeout, &wrote);
 
-	//Read response from PUC
+	//Reading response from PUC
 	char * bufferRead;
 	bufferRead = (char *) malloc(16391*sizeof(char));
 	
 	size_t bytesRead;
 	int eomReason;
 
-	status = pasynOctetSyncIO->read(user, bufferRead, 16391, 5000, &bytesRead, &eomReason);
-	printf("Bytes read: %li", bytesRead);
+	status = pasynOctetSyncIO->read(user, bufferRead, 16391, timeout, &bytesRead, &eomReason);
+	printf("Bytes read: %li\n", bytesRead);
+	printf("eomReason: %d\n", eomReason);
 	if(status != asynSuccess) return status;
 
 	memcpy(value, com.readingCurve(bufferRead), 8192*sizeof(double));
 
-	printf("Debug 2 values:\n");
+	printf("Debug 2 values for test:\n");
 	printf("value[100] = %f\n", value[100]);
   	printf("value[1000] = %f\n", value[1000]);
 
@@ -142,6 +148,7 @@ asynStatus PortConnect :: readFloat64Array(asynUser *pasynUser, epicsFloat64 *va
 }
 
 //Override method from AsynPortDriver
+//Write a curve to PUC
 asynStatus PortConnect :: writeFloat64Array(asynUser* pasynUser, epicsFloat64* value, size_t nElements)
 {
 	asynStatus status = asynError;
@@ -161,8 +168,9 @@ asynStatus PortConnect :: writeFloat64Array(asynUser* pasynUser, epicsFloat64* v
 		char * write = com.writeCurveBlock(address, size, id, offset, value, nElements, &bytesToWrite);
 		
 		printf("Bytes to write: %d\n", bytesToWrite);
+
 		//////////////////Verify command
-		status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);		
+		status = pasynOctetSyncIO->write(user, write, bytesToWrite, timeout, &wrote);		
 		//////////////////
 		
 		//Read response from PUC
@@ -172,7 +180,7 @@ asynStatus PortConnect :: writeFloat64Array(asynUser* pasynUser, epicsFloat64* v
 		size_t bytesRead;
 		int eomReason;
 		
-		status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
+		status = pasynOctetSyncIO->read(user, bufferRead, 5, timeout, &bytesRead, &eomReason);
 		
 		if(status != asynSuccess) return status;
 		
@@ -216,7 +224,7 @@ asynStatus PortConnect :: writeFloat64(asynUser* pasynUser, epicsFloat64 value)
 		char * write = com.writeVariable(address, size, id, (double) value, &bytesToWrite);
 		
 		pasynOctetSyncIO->flush(user);
-		status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
+		status = pasynOctetSyncIO->write(user, write, bytesToWrite, timeout, &wrote);
 		
 		if(status != asynSuccess) return status;
 		
@@ -227,15 +235,19 @@ asynStatus PortConnect :: writeFloat64(asynUser* pasynUser, epicsFloat64 value)
 		size_t bytesRead;
 		int eomReason;
 		
-		status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
+		status = pasynOctetSyncIO->read(user, bufferRead, 5, timeout, &bytesRead, &eomReason);
 		
 		if(status != asynSuccess) return status;
-		
-		printf("Read: %d\n", bufferRead[2]);			
-		printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
+	
+		//TODO: Check correctly the response
+		if(!((bufferRead[2]&0xFF) == 0xE0)) printf("Write fail, response: %u\n", bufferRead[2]&0xFF);
+
+		printf("Bytes read: %li\n", bytesRead);	
+		printf("Read on third byte: %u\n", bufferRead[2]&0xFF);			
+		printf("Bytes write: %d, Bytes wrote: %li \n", bytesToWrite, wrote);
 	}
 
-	return status;	
+	return status;
 }
 
 extern "C"{

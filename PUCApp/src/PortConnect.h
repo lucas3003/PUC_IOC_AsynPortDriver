@@ -35,6 +35,7 @@ protected:
 private:
 	Command com;
 	asynUser* user;
+	int timeout;
 };
 
 #endif
