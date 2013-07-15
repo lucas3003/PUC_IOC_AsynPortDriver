@@ -91,10 +91,33 @@ asynStatus PortConnect :: readFloat64(asynUser* pasynUser, epicsFloat64* value)
 		
 		status = pasynOctetSyncIO->read(user, payload, size+1, timeout, &bytesRead, &eomReason);
 		if(status != asynSuccess) return status;
-		
-		
-		//TODO: Check the checksum
+				
 		*value = com.readingVariable(header, payload);
+
+		//Check the checksum
+		unsigned int check = 0;
+		char check2;
+		int i;
+
+		for(i = 0; i < 4; i++)
+		{
+			check += header[i];
+		}
+
+		for(i = 0; i < size; i++)
+		{
+			check += payload[i];
+		}		
+		
+		
+		check2 = (check & 0xFF);
+		printf("Debug: check2 = %d\n",check2);
+		printf("Debug: checksum = %d\n", payload[size]);
+
+		check2 += (payload[size] & 0xFF);
+		
+		if(check2) printf("Invalid checksum\n");
+		else printf("Checksum correct\n");
 	}	
 	
 	return status;
