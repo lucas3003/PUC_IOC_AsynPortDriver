@@ -23,9 +23,9 @@ private:
 	
 public:    
 	int    checkSize(char size);
-    char * writeVariable(int address, int size, int id, double value, int * bytesToWrite);    
-    char * readVariable(int address, int id, int * bytesToWrite);
-    double readingVariable(char * header, char * payload);
+    char * writeVariable(int address, int size, int id, double value, int * bytesToWrite,int simple);    
+    char * readVariable(int address, int id, int * bytesToWrite,int simple);
+    double readingVariable(char * header, char * payload,int simple);
     double* readingCurve(char * packet);
     char * readCurve(int address, int size, int id, int offset, int * bytesToWrite);
     char * writeCurveBlock(int address, int size, int id, int offset, epicsFloat64 * values, size_t nElements, int * bytesToWrite);

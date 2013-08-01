@@ -52,27 +52,34 @@ float Command :: bytesToValue (unsigned int bytes, int bits)
 	return result;
 }
 
-double Command :: readingVariable(char * header, char * payload)
+double Command :: readingVariable(char * header, char * payload,int simple)
 {
 	//Header: 4 bytes
 	//Payload: size+1 bytes	
 	
 	//TODO: Check command and checksum
 	
+		
+
 	int i;
 	unsigned int bytes = 0;
-	int size = checkSize((char) header[3]);
-	
+	int size = 0;
+	if(!simple)
+		size = checkSize((char) header[3]);
+	else
+		size = checkSize((char) header[1]);
+	union {
+               	unsigned char c[8];
+               	double f;
+       	} u;
 	for(i = 0; i < size; i++)
 	{
-		bytes = bytes << 8;
-		bytes += payload[i];
+		u.c[i] =  payload[i];
 	}
 	
 	printf("Size = %d\n", size);
 	printf("Bytes = %u\n", bytes);
-	
-	return bytesToValue(bytes & 0x3FFFF);
+	return u.f;
 	
 }
 
@@ -106,7 +113,7 @@ double * Command :: readingCurve(char * packet)
 	return result;
 }
 
-char * Command :: readVariable(int address, int id, int * bytesToWrite)
+char * Command :: readVariable(int address, int id, int * bytesToWrite,int simple)
 {
 	char * result;
 	int i;
@@ -118,23 +125,31 @@ char * Command :: readVariable(int address, int id, int * bytesToWrite)
 	    Packet: Address (1 byte), origin (1 byte), command (1 byte), size (1 byte), 
 	    payload (1 byte), checksum (1 byte)	 
 	*/
-	
-	result = (char *) malloc(6*sizeof(char));
-	*bytesToWrite = 6*sizeof(char);
-	
-	result[0] = address & 0xFF;
-	result[1] = 0;
-	result[2] = READ_VARIABLE;
-	result[3] = 1;
-	result[4] = id & 0xFF;
-	
-	for(i = 0; i <= 4; i++) check += result[i];
-	
-	//Checksum
-	result[5] = 0x100 - (check & 0xFF);
-	
-	printf("Send: %d | %d | %d | %d | %d | %u\n", result[0], result[1], result[2], result[3], result[4], result[5] & 0xFF);	
-	
+	if(!simple){
+		result = (char *) malloc(6*sizeof(char));
+		*bytesToWrite = 6*sizeof(char);
+		
+		result[0] = address & 0xFF;
+		result[1] = 0;
+		result[2] = READ_VARIABLE;
+		result[3] = 1;
+		result[4] = id & 0xFF;
+		
+		for(i = 0; i <= 4; i++) check += result[i];
+		
+		//Checksum
+		result[5] = 0x100 - (check & 0xFF);
+		printf("Send: %d | %d | %d | %d | %d | %u\n", result[0], result[1], result[2], result[3], result[4], result[5] & 0xFF);	
+	}
+	else{
+		result = (char *) malloc(3*sizeof(char));
+		*bytesToWrite = 3*sizeof(char);
+		
+		result[0] = READ_VARIABLE;
+		result[1] = 1;
+		result[2] = id & 0xFF;
+		printf("Send: %d | %d | %d \n", result[0], result[1], result[2] & 0xFF);	
+	}
 	fflush(stdout);
 	return result;
 }
@@ -214,7 +229,7 @@ char * Command :: writeCurveBlock(int address, int size, int id, int offset, epi
 	return result;
 }
 
-char * Command :: writeVariable(int address, int size, int id, double value, int * bytesToWrite)
+char * Command :: writeVariable(int address, int size, int id, double value, int * bytesToWrite,int simple)
 {
 	char * result;
 	int i;
@@ -226,31 +241,54 @@ char * Command :: writeVariable(int address, int size, int id, double value, int
 	   Packet: Address (1 byte), origin (1 byte), command (1 byte), size (1 byte), 
 	   payload (size bytes), checksum (1 byte)	  
 	*/
+	if(!simple){
+		result = (char *) malloc ((5+size)*sizeof(char));
+		*bytesToWrite = (5+size)*sizeof(char);
+		result[0] = address & 0xFF;
+		result[1] = 0;
+		result[2] = WRITE_VARIABLE;
+		result[3] = checkSize(size);
+		result[4] = id & 0xFF;
 	
-	result = (char *) malloc ((5+size)*sizeof(char));
-	*bytesToWrite = (5+size)*sizeof(char);
-	result[0] = address & 0xFF;
-	result[1] = 0;
-	result[2] = WRITE_VARIABLE;
-	result[3] = checkSize(size);
-	result[4] = id & 0xFF;
+		unsigned int bytes = valueToBytes(value);
 	
-	unsigned int bytes = valueToBytes(value);
+		unsigned int copyBytes = bytes;
 	
-	unsigned int copyBytes = bytes;
+		for(i = size+3; i > 4; i--)
+		{	
+			result[i] = bytes & 255;
+			bytes = bytes >> 8;
+		}
 	
-	for(i = size+3; i > 4; i--)
-	{	
-		result[i] = bytes & 255;
-		bytes = bytes >> 8;
+		for(i = 0; i <= size+3; i++) check += result[i];
+	
+		//Checksum
+		result[size+4] = 0x100 - (check & 0xFF);
+	
+		printf("Send: %d | %d | %d | %d | %d | %u | %u\n", result[0], result[1], result[2], result[3], result[4], copyBytes, result[size+4] & 0xFF);
 	}
+	else{
+		result = (char *) malloc ((3+size)*sizeof(char));
+		*bytesToWrite = (3+size)*sizeof(char);
+		result[0] = WRITE_VARIABLE;
+		result[1] = checkSize(size)+1;
+		result[2] = id & 0xFF;
 	
-	for(i = 0; i <= size+3; i++) check += result[i];
+		unsigned int bytes = valueToBytes(value);
+		union {
+                	unsigned char c[8];
+                	double f;
+        	} u;
+		u.f = value;
+
+		unsigned int copyBytes = bytes;
 	
-	//Checksum
-	result[size+4] = 0x100 - (check & 0xFF);
-	
-	printf("Send: %d | %d | %d | %d | %d | %u | %u\n", result[0], result[1], result[2], result[3], result[4], copyBytes, result[size+4] & 0xFF);
-	
+		for(i = 0; i < 8; i++)
+		{	
+			result[3+i] = u.c[i];
+		}
+		printf("Send:  %d | %d | %d | %u | %u\n", result[0], result[1], result[2], copyBytes, result[size+2] & 0xFF);
+	}	
+
 	return result;	
 }

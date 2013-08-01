@@ -8,12 +8,12 @@ PortConnect::PortConnect(const char* portName, const char * serialName) : asynPo
 {   
    printf("Constructor\n");
    
-   createParam(P_AddressString, asynParamInt32, &P_Address);
-   createParam(P_IdString, asynParamInt32, &P_Id);
-   createParam(P_ValueString, asynParamFloat64, &P_Value);
-   createParam(P_TypeString, asynParamInt32, &P_Type);
-   createParam(P_SizeString, asynParamInt32, &P_Size);
-   createParam(P_OffsetString, asynParamInt32, &P_Offset);
+   createParam(P_TemperatureSetPoint, asynParamFloat64, &P_TemperatureSP);
+   createParam(P_TemperatureSensor1, asynParamFloat64, &P_TemperatureS1);
+   createParam(P_TemperatureSensor2, asynParamFloat64, &P_TemperatureS2);
+   createParam(P_TemperatureSensor3, asynParamFloat64, &P_TemperatureS3);
+   createParam(P_TemperatureSensor4, asynParamFloat64, &P_TemperatureS4);
+   createParam(P_SwitchState, asynParamInt32, &P_SState);
    
    asynStatus status = pasynOctetSyncIO->connect(serialName, 0, &user, NULL);
    
@@ -31,64 +31,49 @@ asynStatus PortConnect :: readFloat64(asynUser* pasynUser, epicsFloat64* value)
 	printf("Read float64\n");
 	asynStatus status = asynError;
 	
-	int type = 0, size = 0;
-	double val = 0;
+	size_t wrote;
 	
-	getIntegerParam(P_Type, &type);	
-	getIntegerParam(P_Size, &size);
-	getDoubleParam(P_Value, &val);
+	printf("Sending request to read\n");
 	
-	printf("Type: %d\n", type);
-	printf("Size: %d\n", size);
+	int bytesToWrite;
+	int simple=1; 		
+	char * write = com.readVariable(0, pasynUser->reason, &bytesToWrite,simple);
 	
-	if(type) 
-	{
-		printf("Write record\n");
-		*value = (epicsFloat64) val;
-		return asynSuccess;
-	}
+	if (write[0] == 0) return asynSuccess;
+		
+	status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
 	
-	if(pasynUser->reason == P_Value)
-	{		
-		size_t wrote;
+	if(status != asynSuccess) return status;
 		
-		printf("Sending request to read\n");
+	//Read response from PUC
+	//First, read the header, and after read the payload and checksum
 		
-		int address = 0, id = 0;
+	char * header;		
+	char * payload;
+	int size;
 		
-		getIntegerParam(P_Address, &address);
-		getIntegerParam(P_Id,      &id);
-
-		printf("Address: %d, Id: %d\n", address, id);
+	size_t bytesRead;
+	int eomReason;
 		
-		int bytesToWrite;		
-		char * write = com.readVariable(address, id, &bytesToWrite);
+	header = (char *) malloc(2*sizeof(char));
 		
-		if (write[0] == 0) return asynSuccess;
-		
-		status = pasynOctetSyncIO->write(user, write, bytesToWrite, timeout, &wrote);
-		
-		if(status != asynSuccess) return status;
-		
-		//Read response from PUC
-		//First, read the header, and after read the payload and checksum
-		
-		char * header;		
-		char * payload;
-		int size;
-		
-		size_t bytesRead;
-		int eomReason;
-		
-		header = (char *) malloc(4*sizeof(char));
-		
-		printf("Reading\n");
-		status = pasynOctetSyncIO->read(user, header, 4, timeout, &bytesRead, &eomReason);		
-		if(status != asynSuccess) return status;
+	printf("Reading\n");
+	status = pasynOctetSyncIO->read(user, header, 2, 5000, &bytesRead, &eomReason);		
+	if(status != asynSuccess) return status;
 				
-		size = com.checkSize(header[3]);
-		payload = (char *) malloc((size+1)*sizeof(char));
+	size = com.checkSize(header[1]);
+	payload = (char *) malloc((size+1)*sizeof(char));
 		
+	status = pasynOctetSyncIO->read(user, payload, size, 5000, &bytesRead, &eomReason);
+	if(status != asynSuccess) return status;
+		
+	*value = com.readingVariable(header, payload,simple);
+		
+	return status;
+	
+}
+/*
+=======
 		status = pasynOctetSyncIO->read(user, payload, size+1, timeout, &bytesRead, &eomReason);
 		if(status != asynSuccess) return status;
 				
@@ -126,6 +111,7 @@ asynStatus PortConnect :: readFloat64(asynUser* pasynUser, epicsFloat64* value)
 
 //Request and read a curve from PUC.
 //Override method from AsynPortDriver
+>>>>>>> 06506e6a82d16b118e626b4d37b99ab696ed7508
 asynStatus PortConnect :: readFloat64Array(asynUser *pasynUser, epicsFloat64 *value, size_t nElements, size_t *nIn)
 {
 	printf("readFloat64Array\n");
@@ -165,7 +151,7 @@ asynStatus PortConnect :: readFloat64Array(asynUser *pasynUser, epicsFloat64 *va
   	printf("value[1000] = %f\n", value[1000]);
 
 	*nIn = nElements; //Correct this
-
+	
 	fflush(stdout);
 	return status;
 }
@@ -218,57 +204,39 @@ asynStatus PortConnect :: writeFloat64Array(asynUser* pasynUser, epicsFloat64* v
 	fflush(stdout);	
 	return status;
 }
-
+*/
 //Override method from AsynPortDriver
 asynStatus PortConnect :: writeFloat64(asynUser* pasynUser, epicsFloat64 value)
 {	
 	asynStatus status = asynError;
 	
-	int type = 0;
-	getIntegerParam(P_Type,    &type);
-	
-	if(!type) return status;
-	
 	//User can modify only the value
-	if(pasynUser->reason == P_Value)
-	{			
-		size_t wrote;
-
-		printf("Data writing\n");	
-		printf("Value = %f\n", value);
-				
-		int address = 0, id=0, size=0;
+	size_t wrote;
+	printf("Data writing\n");	
+	printf("Value = %f\n", value);
 		
-		getIntegerParam(P_Address, &address);
-		getIntegerParam(P_Size,    &size);
-		getIntegerParam(P_Id,      &id);
-				
-		int bytesToWrite;
-		char * write = com.writeVariable(address, size, id, (double) value, &bytesToWrite);
+	int bytesToWrite;
+	int simple = 1;
+	char * write = com.writeVariable(0, sizeof(epicsFloat64), pasynUser->reason, (double) value, &bytesToWrite,simple);
 		
-		pasynOctetSyncIO->flush(user);
-		status = pasynOctetSyncIO->write(user, write, bytesToWrite, timeout, &wrote);
+	pasynOctetSyncIO->flush(user);
+	status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
 		
-		if(status != asynSuccess) return status;
+	if(status != asynSuccess) return status;
 		
-		//Read response from PUC		
-		char * bufferRead;
-		bufferRead = (char *) malloc(5*sizeof(char));
+	//Read response from PUC		
+	char * bufferRead;
+	bufferRead = (char *) malloc(5*sizeof(char));
 		
-		size_t bytesRead;
-		int eomReason;
+	size_t bytesRead;
+	int eomReason;
 		
-		status = pasynOctetSyncIO->read(user, bufferRead, 5, timeout, &bytesRead, &eomReason);
+	//status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
 		
-		if(status != asynSuccess) return status;
-	
-		//TODO: Check correctly the response
-		if(!((bufferRead[2]&0xFF) == 0xE0)) printf("Write fail, response: %u\n", bufferRead[2]&0xFF);
-
-		printf("Bytes read: %li\n", bytesRead);	
-		printf("Read on third byte: %u\n", bufferRead[2]&0xFF);			
-		printf("Bytes write: %d, Bytes wrote: %li \n", bytesToWrite, wrote);
-	}
+	//if(status != asynSuccess) return status;
+		
+	//printf("Read: %d\n", bufferRead[2]);			
+	printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
 
 	return status;
 }

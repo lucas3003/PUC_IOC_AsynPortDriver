@@ -1,0 +1,100 @@
+record(ai, "BPM:FRONTEND$(PORT):setpoint:read")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature setpoint")
+	field(SCAN,"$(SCAN=1 second)")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint ")
+	field(PREC, "3")
+	field(EGU, "Celsius")
+	field(EGUF, "100.0")
+	field(EGUL, "0.0")
+	field(LINR, "LINEAR")
+}
+record(ao, "BPM:FRONTEND$(PORT):setpoint:write")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature setpoint")
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint")
+	field(PREC, "3")
+	field(SCAN,"Passive")
+	field(EGU, "Celsius")
+	field(LINR, "NO CONVERSION")
+	field(PINI, "YES")
+}
+
+record(ai, "BPM:FRONTEND$(PORT):temperature1")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature sensor 1")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_Sensor1")
+	field(SCAN,"$(SCAN=1 second)")
+	field(PREC, "3")
+	field(EGU, "Celsius")
+	field(LINR, "NO CONVERSION")
+	field(PINI, "YES")
+}
+
+
+record(ai, "BPM:FRONTEND$(PORT):temperature2")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature sensor 2")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_Sensor2")
+	field(PREC, "3")
+	field(SCAN,"$(SCAN=1 second)")
+	field(EGU, "Celsius")
+	field(LINR, "NO CONVERSION")
+	field(PINI, "YES")
+}
+record(ai, "BPM:FRONTEND$(number):temperature3")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature sensor 3")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_Sensor3")
+	field(PREC, "3")
+	field(SCAN,"$(SCAN=1 second)")
+	field(EGU, "Celsius")
+	field(LINR, "NO CONVERSION")
+	field(PINI, "YES")
+}
+record(ai, "BPM:FRONTEND$(PORT):temperature4")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature sensor 4")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_Sensor4")
+	field(PREC, "3")
+	field(SCAN,"$(SCAN=1 second)")
+	field(EGU, "Celsius")
+	field(LINR, "NO CONVERSION")
+	field(PINI, "YES")
+}
+record(mbbi, "BPM:FRONTEND$(PORT):channel1:switchState:read"){
+	field(DTYP, "asynInt32")
+	field(DESC, "Switch state")
+	field(INP, "@asynMask($(PORT),0,4,$(TIMEOUT)")S_State)
+	field(SCAN,"$(SCAN=1 second)")
+	field(NOBT,"2")
+	field(ZRVL,"0")
+	field(ONVL,"1")
+	field(TWVL,"2")
+	field(THVL,"3")
+	field(ZRST,"DIRECT")
+	field(ONST,"INVERT")
+	field(TWST,"MATCHED")
+	field(THST,"SWITCHING")
+}
+record(mbbo, "BPM:FRONTEND$(number):channel1:switchState:write"){
+	field(DTYP, "asynInt32")
+	field(DESC, "Switch state")
+	field(OUT, "@asynMask($(PORT),0,4,$(TIMEOUT)")S_State)
+	field(SCAN,"Passive")
+	field(NOBT,"2")
+	field(ZRVL,"0")
+	field(ONVL,"1")
+	field(TWVL,"2")
+	field(THVL,"3")
+	field(ZRST,"DIRECT")
+	field(ONST,"INVERT")
+	field(TWST,"MATCHED")
+	field(THST,"SWITCHING")
+}

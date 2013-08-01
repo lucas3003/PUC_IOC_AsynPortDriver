@@ -5,12 +5,12 @@
 #include <asynOctetSyncIO.h>
 #include <Command.cpp>
 
-#define P_AddressString "ADDRESS"
-#define P_IdString      "ID"
-#define P_ValueString   "VALUE"
-#define P_TypeString    "TYPE"
-#define P_SizeString    "SIZE"
-#define P_OffsetString  "OFFSET"
+#define P_TemperatureSetPoint "T_SetPoint"
+#define P_TemperatureSensor1      "T_Sensor1"
+#define P_TemperatureSensor2   "T_Sensor2"
+#define P_TemperatureSensor3    "T_Sensor3"
+#define P_TemperatureSensor4    "T_Sensor4"
+#define P_SwitchState  "S_State"
 
 
 class PortConnect : public asynPortDriver
@@ -21,16 +21,16 @@ public:
     virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
     virtual asynStatus readFloat64(asynUser* pasynUser, epicsFloat64* value);
     
-    virtual asynStatus writeFloat64Array(asynUser* pasynUser, epicsFloat64* value, size_t nElements);
-    virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value, size_t nElements, size_t *nIn);
+    //virtual asynStatus writeFloat64Array(asynUser* pasynUser, epicsFloat64* value, size_t nElements);
+    //virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value, size_t nElements, size_t *nIn);
     
 protected:
-	int P_Address;
-	int P_Id;
-	int P_Value;
-	int P_Type;
-	int P_Size;
-	int P_Offset;
+	int P_TemperatureSP;
+	int P_TemperatureS1;
+	int P_TemperatureS2;
+	int P_TemperatureS3;
+	int P_TemperatureS4;
+	int P_SState;
 
 private:
 	Command com;
