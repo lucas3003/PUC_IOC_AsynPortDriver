@@ -240,9 +240,9 @@ asynStatus PortConnect :: writeFloat64(asynUser* pasynUser, epicsFloat64 value)
 
 	return status;
 }
-asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsFloat64* value)
+asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsInt32* value)
 {
-	printf("Read float64\n");
+	printf("Read Int32\n");
 	asynStatus status = asynError;
 	
 	size_t wrote;

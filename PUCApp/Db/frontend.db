@@ -71,7 +71,7 @@ record(ai, "BPM:FRONTEND$(PORT):temperature4")
 record(mbbi, "BPM:FRONTEND$(PORT):channel1:switchState:read"){
 	field(DTYP, "asynInt32")
 	field(DESC, "Switch state")
-	field(INP, "@asynMask($(PORT),0,4,$(TIMEOUT)")S_State)
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT)")S_State)
 	field(SCAN,"$(SCAN=1 second)")
 	field(NOBT,"2")
 	field(ZRVL,"0")
@@ -86,7 +86,7 @@ record(mbbi, "BPM:FRONTEND$(PORT):channel1:switchState:read"){
 record(mbbo, "BPM:FRONTEND$(number):channel1:switchState:write"){
 	field(DTYP, "asynInt32")
 	field(DESC, "Switch state")
-	field(OUT, "@asynMask($(PORT),0,4,$(TIMEOUT)")S_State)
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT)")S_State)
 	field(SCAN,"Passive")
 	field(NOBT,"2")
 	field(ZRVL,"0")
