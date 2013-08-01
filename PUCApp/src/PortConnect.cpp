@@ -247,7 +247,7 @@ asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsInt32* value)
 	
 	size_t wrote;
 	
-	printf("Sending request to read\n");
+	printf("Sending request to read: %d\n",pasynUser->reason);
 	
 	int bytesToWrite;
 	int simple=1; 		

@@ -12,7 +12,7 @@ dbLoadDatabase "dbd/PUC.dbd"
 PUC_registerRecordDeviceDriver pdbbase
 
 ## Load record instances
-dbLoadRecords("db/frontendv0.db","user=rootHost, PORT=0, TIMEOUT=5")
+dbLoadRecords("db/frontend.db","user=rootHost, PORT=0, TIMEOUT=5")
 drvAsynIPPortConfigure("test", "localhost:6791", 0, 0, 0);
 #drvAsynSerialPortConfigure("test", "/dev/ttyACM0",0,0,0)
 portConnectConfigure("0", "test")
