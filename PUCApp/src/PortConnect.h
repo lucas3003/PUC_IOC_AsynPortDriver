@@ -1,5 +1,6 @@
 #ifndef PORT_CONNECT_H_
 #define PORT_CONNECT_H_
+#define BPM
 
 #include <asynPortDriver.h>
 #include <asynOctetSyncIO.h>
@@ -25,13 +26,14 @@ public:
     //virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value, size_t nElements, size_t *nIn);
     
 protected:
+#ifdef BPM
 	int P_TemperatureSP;
 	int P_TemperatureS1;
 	int P_TemperatureS2;
 	int P_TemperatureS3;
 	int P_TemperatureS4;
 	int P_SState;
-
+#endif
 private:
 	Command com;
 	asynUser* user;

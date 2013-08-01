@@ -7,14 +7,14 @@
 PortConnect::PortConnect(const char* portName, const char * serialName) : asynPortDriver(portName, 0, 6, asynInt32Mask | asynOctetMask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask, 0, 0, 1, 0, 0)
 {   
    printf("Constructor\n");
-   
+#ifdef BPM   
    createParam(P_TemperatureSetPoint, asynParamFloat64, &P_TemperatureSP);
    createParam(P_TemperatureSensor1, asynParamFloat64, &P_TemperatureS1);
    createParam(P_TemperatureSensor2, asynParamFloat64, &P_TemperatureS2);
    createParam(P_TemperatureSensor3, asynParamFloat64, &P_TemperatureS3);
    createParam(P_TemperatureSensor4, asynParamFloat64, &P_TemperatureS4);
    createParam(P_SwitchState, asynParamInt32, &P_SState);
-   
+#endif  
    asynStatus status = pasynOctetSyncIO->connect(serialName, 0, &user, NULL);
    
    if(status == asynSuccess) printf("Success: Connect to port\n");   
@@ -239,6 +239,52 @@ asynStatus PortConnect :: writeFloat64(asynUser* pasynUser, epicsFloat64 value)
 	printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
 
 	return status;
+}
+asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsFloat64* value)
+{
+	printf("Read float64\n");
+	asynStatus status = asynError;
+	
+	size_t wrote;
+	
+	printf("Sending request to read\n");
+	
+	int bytesToWrite;
+	int simple=1; 		
+	char * write = com.readVariable(0, pasynUser->reason, &bytesToWrite,simple);
+	
+	if (write[0] == 0) return asynSuccess;
+		
+	status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
+	
+	if(status != asynSuccess) return status;
+		
+	//Read response from PUC
+	//First, read the header, and after read the payload and checksum
+		
+	char * header;		
+	char * payload;
+	int size;
+		
+	size_t bytesRead;
+	int eomReason;
+		
+	header = (char *) malloc(2*sizeof(char));
+		
+	printf("Reading\n");
+	status = pasynOctetSyncIO->read(user, header, 2, 5000, &bytesRead, &eomReason);		
+	if(status != asynSuccess) return status;
+				
+	size = com.checkSize(header[1]);
+	payload = (char *) malloc((size+1)*sizeof(char));
+		
+	status = pasynOctetSyncIO->read(user, payload, size, 5000, &bytesRead, &eomReason);
+	if(status != asynSuccess) return status;
+		
+	*value = com.readingVariable(header, payload,simple);
+		
+	return status;
+	
 }
 
 extern "C"{
