@@ -285,8 +285,9 @@ asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsInt32* value)
 		unsigned char c[4];
 		epicsInt32 inp_i;
 	}u;
+	u.inp_i = 0;
 	int i;
-	for(i=0;i<4;i++){
+	for(i=0;i<size;i++){
 		u.c[i] = payload[i];
 	}
 	*value = u.inp_i;
@@ -295,6 +296,60 @@ asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsInt32* value)
 		
 	return status;
 	
+}
+asynStatus PortConnect :: writeInt32(asynUser* pasynUser, epicsInt32 value)
+{	
+	asynStatus status = asynError;
+	
+	//User can modify only the value
+	size_t wrote;
+	printf("Data writing Int32\n");	
+		
+	int bytesToWrite;
+	int simple = 1;
+	
+	//TODO:USE THE PROTOCOL!
+	//TODO:USE nobts!
+	char *result;
+	result = (char *)malloc((3+1)*sizeof(char));
+	result[0] = WRITE_VARIABLE;
+	result[1] = 1+1;
+	result[2] = pasynUser->reason;
+
+	union {
+		unsigned char c[4];
+		epicsInt32 f;
+	} u;
+	u.f = value;
+	printf("epicsInt32Value: %d\n",u.f);
+	
+	int i = 0;
+	for(i = 0;i < 1; i++){
+		result[3+i] = u.c[i];
+	}
+	
+	for(i = 2;i < 7; i++)
+		printf("message %d\n",result[i]);
+	pasynOctetSyncIO->flush(user);
+	status = pasynOctetSyncIO->write(user, result, (3+1)*sizeof(char), 5000, &wrote);
+		
+	if(status != asynSuccess) return status;
+		
+	//Read response from PUC		
+	char * bufferRead;
+	bufferRead = (char *) malloc(5*sizeof(char));
+		
+	size_t bytesRead;
+	int eomReason;
+		
+	//status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
+		
+	//if(status != asynSuccess) return status;
+		
+	//printf("Read: %d\n", bufferRead[2]);			
+	printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
+
+	return status;
 }
 
 extern "C"{
