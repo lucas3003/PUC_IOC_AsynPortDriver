@@ -242,7 +242,7 @@ asynStatus PortConnect :: writeFloat64(asynUser* pasynUser, epicsFloat64 value)
 }
 asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsInt32* value)
 {
-	printf("Read Int32\n");
+	printf("Read Int32");
 	asynStatus status = asynError;
 	
 	size_t wrote;
@@ -280,8 +280,18 @@ asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsInt32* value)
 		
 	status = pasynOctetSyncIO->read(user, payload, size, 5000, &bytesRead, &eomReason);
 	if(status != asynSuccess) return status;
-		
-	*value = com.readingVariable(header, payload,simple);
+	//TODO:NO THE BEST WAY TO DO THIS CONVERSION!!Use the protocol!	
+	union{
+		unsigned char c[4];
+		epicsInt32 inp_i;
+	}u;
+	int i;
+	for(i=0;i<4;i++){
+		u.c[i] = payload[i];
+	}
+	*value = u.inp_i;
+	//*value = com.readingVariable(header, payload,simple);
+	
 		
 	return status;
 	
