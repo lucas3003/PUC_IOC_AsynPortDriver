@@ -7,28 +7,27 @@
 PortConnect::PortConnect(const char* portName, const char * serialName) : asynPortDriver(portName, 0, 6, asynInt32Mask | asynOctetMask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask, 0, 0, 1, 0, 0)
 {   
    printf("Constructor\n");
-#ifdef BPM   
+#if defined BPM
    createParam(P_TemperatureSetPoint, asynParamFloat64, &P_TemperatureSP);
    createParam(P_TemperatureSensor1, asynParamFloat64, &P_TemperatureS1);
    createParam(P_TemperatureSensor2, asynParamFloat64, &P_TemperatureS2);
    createParam(P_TemperatureSensor3, asynParamFloat64, &P_TemperatureS3);
    createParam(P_TemperatureSensor4, asynParamFloat64, &P_TemperatureS4);
    createParam(P_SwitchState, asynParamInt32, &P_SState);
-#endif  
-   asynStatus status = pasynOctetSyncIO->connect(serialName, 0, &user, NULL);
-   
-   if(status == asynSuccess) printf("Success: Connect to port\n");   
-   else printf("Error: Connect to port");   
+#elif defined PUC
+   createParam(P_AddressString, asynParamInt32, &P_Address);
+   createParam(P_IdString, asynParamInt32, &P_Id);
+#endif
 
-   timeout = 5000;
-   
-   pasynOctetSyncIO->flush(user);   
+   if(serial.connect(serialName)) printf("Success: Connected to port %s\n", serialName);
+   else printf("Error: Port %s not connected\n", serialName);
+
 }
 
 //Override method from AsynPortDriver
 asynStatus PortConnect :: readFloat64(asynUser* pasynUser, epicsFloat64* value)
 {
-	printf("Read float64\n");
+	/*printf("Read float64\n");
 	asynStatus status = asynError;
 	
 	size_t wrote;
@@ -69,7 +68,7 @@ asynStatus PortConnect :: readFloat64(asynUser* pasynUser, epicsFloat64* value)
 		
 	*value = com.readingVariable(header, payload,simple);
 		
-	return status;
+	return status;*/
 	
 }
 /*
@@ -208,41 +207,41 @@ asynStatus PortConnect :: writeFloat64Array(asynUser* pasynUser, epicsFloat64* v
 //Override method from AsynPortDriver
 asynStatus PortConnect :: writeFloat64(asynUser* pasynUser, epicsFloat64 value)
 {	
-	asynStatus status = asynError;
-	
-	//User can modify only the value
-	size_t wrote;
-	printf("Data writing\n");	
+	printf("Data writing\n");
 	printf("Value = %f\n", value);
-		
-	int bytesToWrite;
-	int simple = 1;
-	char * write = com.writeVariable(0, sizeof(epicsFloat64), pasynUser->reason, (double) value, &bytesToWrite,simple);
-		
-	pasynOctetSyncIO->flush(user);
-	status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
-		
-	if(status != asynSuccess) return status;
-		
-	//Read response from PUC		
-	char * bufferRead;
-	bufferRead = (char *) malloc(5*sizeof(char));
-		
-	size_t bytesRead;
-	int eomReason;
-		
-	//status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
-		
-	//if(status != asynSuccess) return status;
-		
-	//printf("Read: %d\n", bufferRead[2]);			
-	printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
 
-	return status;
+	int bytesToWrite, id;	
+
+	getIntegerParam(P_Id, &id);
+
+	char * packet = sllp.writeVariable(id, 18, (double) value, &bytesToWrite);
+
+	#if defined PUC
+		int address;
+		getIntegerParam(P_Address, &address);						
+		if(!serial.send(address, packet, bytesToWrite)) return asynError;
+
+	#elif defined BPM
+		//Send with TCP/IP
+	#endif
+
+	//Read response
+
+	#if defined PUC
+		char * response = serial.receive();
+	#elif defined BPM
+		//Read with TCP/IP
+	#endif
+
+	printf("Command : %u\n", response[0] & 0xFF);
+	printf("Size : %d\n", response[1]);
+
+	if(sllp.checkReturn(response)) return asynSuccess;
+	else return asynError;
 }
 asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsInt32* value)
 {
-	printf("Read Int32");
+	/*printf("Read Int32");
 	asynStatus status = asynError;
 	
 	size_t wrote;
@@ -294,12 +293,12 @@ asynStatus PortConnect :: readInt32(asynUser* pasynUser, epicsInt32* value)
 	//*value = com.readingVariable(header, payload,simple);
 	
 		
-	return status;
+	return status;*/
 	
 }
 asynStatus PortConnect :: writeInt32(asynUser* pasynUser, epicsInt32 value)
 {	
-	asynStatus status = asynError;
+	/*asynStatus status = asynError;
 	
 	//User can modify only the value
 	size_t wrote;
@@ -349,7 +348,7 @@ asynStatus PortConnect :: writeInt32(asynUser* pasynUser, epicsInt32 value)
 	//printf("Read: %d\n", bufferRead[2]);			
 	printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
 
-	return status;
+	return status;*/
 }
 
 extern "C"{
