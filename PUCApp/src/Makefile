@@ -14,7 +14,8 @@ DBD += PUC.dbd
 
 # PUC.dbd will be made up from these files:
 PUC_DBD += base.dbd
-PUC_DBD += portInclude.dbd
+
+#PUC_DBD += portInclude.dbd
 
 # Include dbd files from all support applications:
 #PUC_DBD += xxx.dbd
@@ -24,7 +25,7 @@ PUC_DBD += portInclude.dbd
 
 # PUC_registerRecordDeviceDriver.cpp derives from PUC.dbd
 PUC_SRCS += PUC_registerRecordDeviceDriver.cpp
-PUC_SRCS += PortConnect.cpp
+PUC_SRCS += devFrontend.c
 
 # Build the main IOC entry point on workstation OSs.
 PUC_SRCS_DEFAULT += PUCMain.cpp

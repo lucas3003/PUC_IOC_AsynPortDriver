@@ -3,6 +3,7 @@
 ## You may have to change PUC to something else
 ## everywhere it appears in this file
 
+epicsEnvSet("uCIP","$(uCIP=192.168.1.51:10001)")
 < envPaths
 
 cd ${TOP}
@@ -13,9 +14,8 @@ PUC_registerRecordDeviceDriver pdbbase
 
 ## Load record instances
 dbLoadRecords("db/frontend.db","user=rootHost, PORT=0, TIMEOUT=5")
-drvAsynIPPortConfigure("test", "localhost:6791", 0, 0, 0);
+devFrontendConfigure("0", "$(uCIP)", 0x1);
 #drvAsynSerialPortConfigure("test", "/dev/ttyACM0",0,0,0)
-portConnectConfigure("0", "test")
 
 cd ${TOP}/iocBoot/${IOC}
 iocInit

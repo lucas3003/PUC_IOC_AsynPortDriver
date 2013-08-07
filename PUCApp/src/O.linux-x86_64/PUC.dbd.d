@@ -1,7 +1,6 @@
 # DO NOT EDIT: This file created by mkmf.pl,v 1.5 2002/03/25 21:33:24 jba Exp $ 
 
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/base.dbd
-../O.Common/PUC.dbd : ../portInclude.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/menuGlobal.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/menuConvert.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/aaiRecord.dbd
