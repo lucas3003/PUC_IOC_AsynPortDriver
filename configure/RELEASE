@@ -31,4 +31,4 @@ EPICS_BASE=/home/igor/epics/base
 # other than EPICS_BASE:
 #RULES=/path/to/epics/support/module/rules/x-y
 
-ASYN=/home/epics/asyn/asyn/asyn4-21
+ASYN=/home/igor/asyn/asyn4-21

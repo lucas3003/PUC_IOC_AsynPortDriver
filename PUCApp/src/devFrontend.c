@@ -30,7 +30,7 @@
 #include <epicsTime.h>
 #include <errlog.h>
 #include <iocsh.h>
-
+//#include "Command.h"
 #include "asynDriver.h"
 #include "asynOctetSyncIO.h"
 #include "asynInt32.h"
@@ -138,7 +138,7 @@ typedef struct FrontendPvt {
  * Send command and get reply
  */
 static asynStatus
-sendCommand(asynUser *pasynUser, caenA26xPvt *ppvt, int command, double setpoint)
+sendCommand(asynUser *pasynUser, FrontendPvt *ppvt, int command, double setpoint)
 {
     char sendBuf[80];
     char replyBuf[80];
@@ -244,13 +244,12 @@ int32Write(void *pvt, asynUser *pasynUser, epicsInt32 value)
 	printf("Data writing Int32\n");	
 		
 	int bytesToWrite;
-	int simple = 1;
 	
 	//TODO:USE THE PROTOCOL!
 	//TODO:USE nobts!
 	char *result;
 	result = (char *)malloc((3+1)*sizeof(char));
-	result[0] = WRITE_VARIABLE;
+	result[0] = 0x20;//WRITE_VARIABLE;
 	result[1] = 1+1;
 	result[2] = pasynUser->reason;
 
@@ -268,17 +267,17 @@ int32Write(void *pvt, asynUser *pasynUser, epicsInt32 value)
 	
 	for(i = 2;i < 7; i++)
 		printf("message %d\n",result[i]);
-	pasynOctetSyncIO->flush(user);
-	status = pasynOctetSyncIO->write(user, result, (3+1)*sizeof(char), 5000, &wrote);
+	pasynOctetSyncIO->flush(ppvt->pasynUser);
+	status = pasynOctetSyncIO->write(ppvt->pasynUser, result, (3+1)*sizeof(char), 5000, &wrote);
 		
 	if(status != asynSuccess) return status;
 		
 	//Read response from PUC		
-	char * bufferRead;
-	bufferRead = (char *) malloc(5*sizeof(char));
+	//char * bufferRead;
+	//bufferRead = (char *) malloc(5*sizeof(char));
 		
-	size_t bytesRead;
-	int eomReason;
+	//size_t bytesRead;
+	//int eomReason;
 		
 	//status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
 		
@@ -302,12 +301,16 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 	printf("Sending request to read: %d\n",pasynUser->reason);
 	
 	int bytesToWrite;
-	int simple=1; 		
-	char * write = com.readVariable(0, pasynUser->reason, &bytesToWrite,simple);
-	
-	if (write[0] == 0) return asynSuccess;
+	char *result;
+	result = (char *) malloc(3*sizeof(char));
+	bytesToWrite = 3*sizeof(char);
 		
-	status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
+	result[0] = 0x10;//READ_VARIABLE
+	result[1] = 1;
+	result[2] = (pasynUser->reason) & 0xFF;
+	fflush(stdout);
+		
+	status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
 	
 	if(status != asynSuccess) return status;
 		
@@ -324,13 +327,13 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 	header = (char *) malloc(2*sizeof(char));
 		
 	printf("Reading\n");
-	status = pasynOctetSyncIO->read(user, header, 2, 5000, &bytesRead, &eomReason);		
+	status = pasynOctetSyncIO->read(ppvt->pasynUser, header, 2, 5000, &bytesRead, &eomReason);		
 	if(status != asynSuccess) return status;
 				
-	size = com.checkSize(header[1]);
+	size = header[1];
 	payload = (char *) malloc((size+1)*sizeof(char));
 		
-	status = pasynOctetSyncIO->read(user, payload, size, 5000, &bytesRead, &eomReason);
+	status = pasynOctetSyncIO->read(ppvt->pasynUser, payload, size, 5000, &bytesRead, &eomReason);
 	if(status != asynSuccess) return status;
 	//TODO:NO THE BEST WAY TO DO THIS CONVERSION!!Use the protocol!	
 	union{
@@ -364,22 +367,38 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 	size_t wrote;
 	printf("Data writing\n");	
 	printf("Value = %f\n", value);
-		
+	char *result;
 	int bytesToWrite;
-	int simple = 1;
-	char * write = com.writeVariable(0, sizeof(epicsFloat64), pasynUser->reason, (double) value, &bytesToWrite,simple);
-		
-	pasynOctetSyncIO->flush(user);
-	status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
+	int size=4;
+	//char * write = com.writeVariable(0, sizeof(epicsFloat64), pasynUser->reason, (double) value, &bytesToWrite,simple);
+	result = (char *) malloc ((3+size)*sizeof(char));
+	bytesToWrite = (3+size)*sizeof(char);
+	result[0] = 0x20;//WRITE_VARIABLE;
+	result[1] = (size)+1;
+	result[2] = (pasynUser->reason) & 0xFF;
+	union {
+               	unsigned char c[8];
+               	double f;
+        } u;
+	int i;
+	u.f = value;
+	for(i = 0; i < 8; i++)
+	{	
+	result[3+i] = u.c[i];
+	}
+	printf("Send:  %d | %d | %d | | %u\n", result[0], result[1], result[2], result[size+2] & 0xFF);
+
+	pasynOctetSyncIO->flush(ppvt->pasynUser);
+	status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
 		
 	if(status != asynSuccess) return status;
 		
 	//Read response from PUC		
-	char * bufferRead;
-	bufferRead = (char *) malloc(5*sizeof(char));
+	//char * bufferRead;
+	//bufferRead = (char *) malloc(5*sizeof(char));
 		
-	size_t bytesRead;
-	int eomReason;
+	//size_t bytesRead;
+	//int eomReason;
 		
 	//status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
 		
@@ -403,12 +422,15 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	printf("Sending request to read\n");
 	
 	int bytesToWrite;
-	int simple=1; 		
-	char * write = com.readVariable(0, return_id(pasynUser->reason), &bytesToWrite,simple);
+	char *result;
+ 	result = (char *) malloc(3*sizeof(char));
+	bytesToWrite = 3*sizeof(char);
+	result[0] = 0x10;//READ_VARIABLE;
+	result[1] = 1;
+	result[2] = (pasynUser->reason) & 0xFF;
+	printf("Send: %d | %d | %d \n", result[0], result[1], result[2] & 0xFF);	
 	
-	if (write[0] == 0) return asynSuccess;
-		
-	status = pasynOctetSyncIO->write(user, write, bytesToWrite, 5000, &wrote);
+	status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
 	
 	if(status != asynSuccess) return status;
 		
@@ -425,16 +447,24 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	header = (char *) malloc(2*sizeof(char));
 		
 	printf("Reading\n");
-	status = pasynOctetSyncIO->read(user, header, 2, 5000, &bytesRead, &eomReason);		
+	status = pasynOctetSyncIO->read(ppvt->pasynUser, header, 2, 5000, &bytesRead, &eomReason);		
 	if(status != asynSuccess) return status;
 				
-	size = com.checkSize(header[1]);
+	size = header[1];
 	payload = (char *) malloc((size+1)*sizeof(char));
 		
-	status = pasynOctetSyncIO->read(user, payload, size, 5000, &bytesRead, &eomReason);
+	status = pasynOctetSyncIO->read(ppvt->pasynUser, payload, size, 5000, &bytesRead, &eomReason);
 	if(status != asynSuccess) return status;
-		
-	*value = com.readingVariable(header, payload,simple);
+	union {
+               	unsigned char c[8];
+               	double f;
+       	} u;
+	int i;
+	for(i = 0; i < size; i++)
+	{
+		u.c[i] =  payload[i];
+	}
+	*value = u.f;
 		
 	return status;
 }
@@ -523,15 +553,15 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
 static const iocshArg devFrontendConfigureArg0 = { "port name",iocshArgString};
 static const iocshArg devFrontendConfigureArg1 = { "host:port",iocshArgString};
 static const iocshArg devFrontendConfigureArg2 = { "flags",iocshArgInt};
-static const iocshArg devFrontendConfigureArg3 = { "priority",iocshArgInt};
+//static const iocshArg devFrontendConfigureArg3 = { "priority",iocshArgInt};
 static const iocshArg *devFrontendConfigureArgs[] = {
                     &devFrontendConfigureArg0, &devFrontendConfigureArg1,
-                    &devFrontendConfigureArg2, &devFrontendConfigureArg3 };
+                    &devFrontendConfigureArg2/*, &devFrontendConfigureArg3*/ };
 static const iocshFuncDef devFrontendConfigureFuncDef =
-                      {"devFrontendConfigure",4,devFrontendConfigureArgs};
+                      {"devFrontendConfigure",3,devFrontendConfigureArgs};
 static void devFrontendConfigureCallFunc(const iocshArgBuf *args)
 {
-    devFrontendConfigure(args[0].sval, args[1].sval, args[2].ival, args[3].ival);
+    devFrontendConfigure(args[0].sval, args[1].sval, args[2].ival);
 }
 
 static void

@@ -38,6 +38,8 @@ PUC_SRCS_vxWorks += -nil-
 PUC_LIBS += $(EPICS_BASE_IOC_LIBS)
 PUC_LIBS += asyn
 
+DB_INSTALLS += Frontend.dbd
+
 #===========================
 
 include $(TOP)/configure/RULES
