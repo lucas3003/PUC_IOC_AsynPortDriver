@@ -66,8 +66,10 @@ epicsShareExtern rset *pvar_rset_subArrayRSET;
 epicsShareExtern int (*pvar_func_subArrayRecordSizeOffset)(dbRecordType *pdbRecordType);
 epicsShareExtern rset *pvar_rset_waveformRSET;
 epicsShareExtern int (*pvar_func_waveformRecordSizeOffset)(dbRecordType *pdbRecordType);
+epicsShareExtern rset *pvar_rset_asynRSET;
+epicsShareExtern int (*pvar_func_asynRecordSizeOffset)(dbRecordType *pdbRecordType);
 
-static const char * const recordTypeNames[28] = {
+static const char * const recordTypeNames[29] = {
     "aai",
     "aao",
     "ai",
@@ -95,10 +97,11 @@ static const char * const recordTypeNames[28] = {
     "stringout",
     "sub",
     "subArray",
-    "waveform"
+    "waveform",
+    "asyn"
 };
 
-static const recordTypeLocation rtl[28] = {
+static const recordTypeLocation rtl[29] = {
     {pvar_rset_aaiRSET, pvar_func_aaiRecordSizeOffset},
     {pvar_rset_aaoRSET, pvar_func_aaoRecordSizeOffset},
     {pvar_rset_aiRSET, pvar_func_aiRecordSizeOffset},
@@ -126,7 +129,8 @@ static const recordTypeLocation rtl[28] = {
     {pvar_rset_stringoutRSET, pvar_func_stringoutRecordSizeOffset},
     {pvar_rset_subRSET, pvar_func_subRecordSizeOffset},
     {pvar_rset_subArrayRSET, pvar_func_subArrayRecordSizeOffset},
-    {pvar_rset_waveformRSET, pvar_func_waveformRecordSizeOffset}
+    {pvar_rset_waveformRSET, pvar_func_waveformRecordSizeOffset},
+    {pvar_rset_asynRSET, pvar_func_asynRecordSizeOffset}
 };
 
 epicsShareExtern dset *pvar_dset_devAaiSoft;
@@ -135,128 +139,267 @@ epicsShareExtern dset *pvar_dset_devAiSoft;
 epicsShareExtern dset *pvar_dset_devAiSoftRaw;
 epicsShareExtern dset *pvar_dset_devTimestampAI;
 epicsShareExtern dset *pvar_dset_devAiGeneralTime;
+epicsShareExtern dset *pvar_dset_asynAiInt32;
+epicsShareExtern dset *pvar_dset_asynAiInt32Average;
+epicsShareExtern dset *pvar_dset_asynAiFloat64;
+epicsShareExtern dset *pvar_dset_asynAiFloat64Average;
 epicsShareExtern dset *pvar_dset_devAoSoft;
 epicsShareExtern dset *pvar_dset_devAoSoftRaw;
 epicsShareExtern dset *pvar_dset_devAoSoftCallback;
+epicsShareExtern dset *pvar_dset_asynAoInt32;
+epicsShareExtern dset *pvar_dset_asynAoFloat64;
 epicsShareExtern dset *pvar_dset_devBiSoft;
 epicsShareExtern dset *pvar_dset_devBiSoftRaw;
+epicsShareExtern dset *pvar_dset_asynBiInt32;
+epicsShareExtern dset *pvar_dset_asynBiUInt32Digital;
 epicsShareExtern dset *pvar_dset_devBoSoft;
 epicsShareExtern dset *pvar_dset_devBoSoftRaw;
 epicsShareExtern dset *pvar_dset_devBoSoftCallback;
 epicsShareExtern dset *pvar_dset_devBoGeneralTime;
+epicsShareExtern dset *pvar_dset_asynBoInt32;
+epicsShareExtern dset *pvar_dset_asynBoUInt32Digital;
 epicsShareExtern dset *pvar_dset_devCalcoutSoft;
 epicsShareExtern dset *pvar_dset_devCalcoutSoftCallback;
 epicsShareExtern dset *pvar_dset_devEventSoft;
 epicsShareExtern dset *pvar_dset_devLiSoft;
 epicsShareExtern dset *pvar_dset_devLiGeneralTime;
+epicsShareExtern dset *pvar_dset_asynLiInt32;
+epicsShareExtern dset *pvar_dset_asynLiUInt32Digital;
 epicsShareExtern dset *pvar_dset_devLoSoft;
 epicsShareExtern dset *pvar_dset_devLoSoftCallback;
+epicsShareExtern dset *pvar_dset_asynLoInt32;
+epicsShareExtern dset *pvar_dset_asynLoUInt32Digital;
 epicsShareExtern dset *pvar_dset_devMbbiSoft;
 epicsShareExtern dset *pvar_dset_devMbbiSoftRaw;
+epicsShareExtern dset *pvar_dset_asynMbbiInt32;
+epicsShareExtern dset *pvar_dset_asynMbbiUInt32Digital;
 epicsShareExtern dset *pvar_dset_devMbbiDirectSoft;
 epicsShareExtern dset *pvar_dset_devMbbiDirectSoftRaw;
+epicsShareExtern dset *pvar_dset_asynMbbiDirectUInt32Digital;
 epicsShareExtern dset *pvar_dset_devMbboSoft;
 epicsShareExtern dset *pvar_dset_devMbboSoftRaw;
 epicsShareExtern dset *pvar_dset_devMbboSoftCallback;
+epicsShareExtern dset *pvar_dset_asynMbboInt32;
+epicsShareExtern dset *pvar_dset_asynMbboUInt32Digital;
 epicsShareExtern dset *pvar_dset_devMbboDirectSoft;
 epicsShareExtern dset *pvar_dset_devMbboDirectSoftRaw;
 epicsShareExtern dset *pvar_dset_devMbboDirectSoftCallback;
+epicsShareExtern dset *pvar_dset_asynMbboDirectUInt32Digital;
 epicsShareExtern dset *pvar_dset_devSiSoft;
 epicsShareExtern dset *pvar_dset_devTimestampSI;
 epicsShareExtern dset *pvar_dset_devSiGeneralTime;
+epicsShareExtern dset *pvar_dset_asynSiOctetCmdResponse;
+epicsShareExtern dset *pvar_dset_asynSiOctetWriteRead;
+epicsShareExtern dset *pvar_dset_asynSiOctetRead;
 epicsShareExtern dset *pvar_dset_devSoSoft;
 epicsShareExtern dset *pvar_dset_devSoSoftCallback;
 epicsShareExtern dset *pvar_dset_devSoStdio;
+epicsShareExtern dset *pvar_dset_asynSoOctetWrite;
 epicsShareExtern dset *pvar_dset_devSASoft;
 epicsShareExtern dset *pvar_dset_devWfSoft;
+epicsShareExtern dset *pvar_dset_asynWfOctetCmdResponse;
+epicsShareExtern dset *pvar_dset_asynWfOctetWriteRead;
+epicsShareExtern dset *pvar_dset_asynWfOctetRead;
+epicsShareExtern dset *pvar_dset_asynWfOctetWrite;
+epicsShareExtern dset *pvar_dset_asynInt8ArrayWfIn;
+epicsShareExtern dset *pvar_dset_asynInt8ArrayWfOut;
+epicsShareExtern dset *pvar_dset_asynInt16ArrayWfIn;
+epicsShareExtern dset *pvar_dset_asynInt16ArrayWfOut;
+epicsShareExtern dset *pvar_dset_asynInt32ArrayWfIn;
+epicsShareExtern dset *pvar_dset_asynInt32ArrayWfOut;
+epicsShareExtern dset *pvar_dset_asynInt32TimeSeries;
+epicsShareExtern dset *pvar_dset_asynFloat32ArrayWfIn;
+epicsShareExtern dset *pvar_dset_asynFloat32ArrayWfOut;
+epicsShareExtern dset *pvar_dset_asynFloat64ArrayWfIn;
+epicsShareExtern dset *pvar_dset_asynFloat64ArrayWfOut;
+epicsShareExtern dset *pvar_dset_asynFloat64TimeSeries;
+epicsShareExtern dset *pvar_dset_asynRecordDevice;
 
-static const char * const deviceSupportNames[40] = {
+static const char * const deviceSupportNames[81] = {
     "devAaiSoft",
     "devAaoSoft",
     "devAiSoft",
     "devAiSoftRaw",
     "devTimestampAI",
     "devAiGeneralTime",
+    "asynAiInt32",
+    "asynAiInt32Average",
+    "asynAiFloat64",
+    "asynAiFloat64Average",
     "devAoSoft",
     "devAoSoftRaw",
     "devAoSoftCallback",
+    "asynAoInt32",
+    "asynAoFloat64",
     "devBiSoft",
     "devBiSoftRaw",
+    "asynBiInt32",
+    "asynBiUInt32Digital",
     "devBoSoft",
     "devBoSoftRaw",
     "devBoSoftCallback",
     "devBoGeneralTime",
+    "asynBoInt32",
+    "asynBoUInt32Digital",
     "devCalcoutSoft",
     "devCalcoutSoftCallback",
     "devEventSoft",
     "devLiSoft",
     "devLiGeneralTime",
+    "asynLiInt32",
+    "asynLiUInt32Digital",
     "devLoSoft",
     "devLoSoftCallback",
+    "asynLoInt32",
+    "asynLoUInt32Digital",
     "devMbbiSoft",
     "devMbbiSoftRaw",
+    "asynMbbiInt32",
+    "asynMbbiUInt32Digital",
     "devMbbiDirectSoft",
     "devMbbiDirectSoftRaw",
+    "asynMbbiDirectUInt32Digital",
     "devMbboSoft",
     "devMbboSoftRaw",
     "devMbboSoftCallback",
+    "asynMbboInt32",
+    "asynMbboUInt32Digital",
     "devMbboDirectSoft",
     "devMbboDirectSoftRaw",
     "devMbboDirectSoftCallback",
+    "asynMbboDirectUInt32Digital",
     "devSiSoft",
     "devTimestampSI",
     "devSiGeneralTime",
+    "asynSiOctetCmdResponse",
+    "asynSiOctetWriteRead",
+    "asynSiOctetRead",
     "devSoSoft",
     "devSoSoftCallback",
     "devSoStdio",
+    "asynSoOctetWrite",
     "devSASoft",
-    "devWfSoft"
+    "devWfSoft",
+    "asynWfOctetCmdResponse",
+    "asynWfOctetWriteRead",
+    "asynWfOctetRead",
+    "asynWfOctetWrite",
+    "asynInt8ArrayWfIn",
+    "asynInt8ArrayWfOut",
+    "asynInt16ArrayWfIn",
+    "asynInt16ArrayWfOut",
+    "asynInt32ArrayWfIn",
+    "asynInt32ArrayWfOut",
+    "asynInt32TimeSeries",
+    "asynFloat32ArrayWfIn",
+    "asynFloat32ArrayWfOut",
+    "asynFloat64ArrayWfIn",
+    "asynFloat64ArrayWfOut",
+    "asynFloat64TimeSeries",
+    "asynRecordDevice"
 };
 
-static const dset * const devsl[40] = {
+static const dset * const devsl[81] = {
     pvar_dset_devAaiSoft,
     pvar_dset_devAaoSoft,
     pvar_dset_devAiSoft,
     pvar_dset_devAiSoftRaw,
     pvar_dset_devTimestampAI,
     pvar_dset_devAiGeneralTime,
+    pvar_dset_asynAiInt32,
+    pvar_dset_asynAiInt32Average,
+    pvar_dset_asynAiFloat64,
+    pvar_dset_asynAiFloat64Average,
     pvar_dset_devAoSoft,
     pvar_dset_devAoSoftRaw,
     pvar_dset_devAoSoftCallback,
+    pvar_dset_asynAoInt32,
+    pvar_dset_asynAoFloat64,
     pvar_dset_devBiSoft,
     pvar_dset_devBiSoftRaw,
+    pvar_dset_asynBiInt32,
+    pvar_dset_asynBiUInt32Digital,
     pvar_dset_devBoSoft,
     pvar_dset_devBoSoftRaw,
     pvar_dset_devBoSoftCallback,
     pvar_dset_devBoGeneralTime,
+    pvar_dset_asynBoInt32,
+    pvar_dset_asynBoUInt32Digital,
     pvar_dset_devCalcoutSoft,
     pvar_dset_devCalcoutSoftCallback,
     pvar_dset_devEventSoft,
     pvar_dset_devLiSoft,
     pvar_dset_devLiGeneralTime,
+    pvar_dset_asynLiInt32,
+    pvar_dset_asynLiUInt32Digital,
     pvar_dset_devLoSoft,
     pvar_dset_devLoSoftCallback,
+    pvar_dset_asynLoInt32,
+    pvar_dset_asynLoUInt32Digital,
     pvar_dset_devMbbiSoft,
     pvar_dset_devMbbiSoftRaw,
+    pvar_dset_asynMbbiInt32,
+    pvar_dset_asynMbbiUInt32Digital,
     pvar_dset_devMbbiDirectSoft,
     pvar_dset_devMbbiDirectSoftRaw,
+    pvar_dset_asynMbbiDirectUInt32Digital,
     pvar_dset_devMbboSoft,
     pvar_dset_devMbboSoftRaw,
     pvar_dset_devMbboSoftCallback,
+    pvar_dset_asynMbboInt32,
+    pvar_dset_asynMbboUInt32Digital,
     pvar_dset_devMbboDirectSoft,
     pvar_dset_devMbboDirectSoftRaw,
     pvar_dset_devMbboDirectSoftCallback,
+    pvar_dset_asynMbboDirectUInt32Digital,
     pvar_dset_devSiSoft,
     pvar_dset_devTimestampSI,
     pvar_dset_devSiGeneralTime,
+    pvar_dset_asynSiOctetCmdResponse,
+    pvar_dset_asynSiOctetWriteRead,
+    pvar_dset_asynSiOctetRead,
     pvar_dset_devSoSoft,
     pvar_dset_devSoSoftCallback,
     pvar_dset_devSoStdio,
+    pvar_dset_asynSoOctetWrite,
     pvar_dset_devSASoft,
-    pvar_dset_devWfSoft
+    pvar_dset_devWfSoft,
+    pvar_dset_asynWfOctetCmdResponse,
+    pvar_dset_asynWfOctetWriteRead,
+    pvar_dset_asynWfOctetRead,
+    pvar_dset_asynWfOctetWrite,
+    pvar_dset_asynInt8ArrayWfIn,
+    pvar_dset_asynInt8ArrayWfOut,
+    pvar_dset_asynInt16ArrayWfIn,
+    pvar_dset_asynInt16ArrayWfOut,
+    pvar_dset_asynInt32ArrayWfIn,
+    pvar_dset_asynInt32ArrayWfOut,
+    pvar_dset_asynInt32TimeSeries,
+    pvar_dset_asynFloat32ArrayWfIn,
+    pvar_dset_asynFloat32ArrayWfOut,
+    pvar_dset_asynFloat64ArrayWfIn,
+    pvar_dset_asynFloat64ArrayWfOut,
+    pvar_dset_asynFloat64TimeSeries,
+    pvar_dset_asynRecordDevice
+};
+
+epicsShareExtern drvet *pvar_drvet_drvAsyn;
+
+static const char *driverSupportNames[1] = {
+    "drvAsyn"
+};
+
+static struct drvet *drvsl[1] = {
+    pvar_drvet_drvAsyn
 };
 
 epicsShareExtern void (*pvar_func_asSub)(void);
+epicsShareExtern void (*pvar_func_devFrontendConfigure_RegisterCommands)(void);
+epicsShareExtern void (*pvar_func_drvAsynIPPortRegisterCommands)(void);
+epicsShareExtern void (*pvar_func_drvAsynIPServerPortRegisterCommands)(void);
+epicsShareExtern void (*pvar_func_asynRegister)(void);
+epicsShareExtern void (*pvar_func_asynInterposeFlushRegister)(void);
+epicsShareExtern void (*pvar_func_asynInterposeEosRegister)(void);
 
 epicsShareExtern int *pvar_int_asCaDebug;
 epicsShareExtern int *pvar_int_dbRecordsOnceOnly;
@@ -284,9 +427,16 @@ int PUC_registerRecordDeviceDriver(DBBASE *pbase)
         return -1;
     }
 
-    registerRecordTypes(pbase, 28, recordTypeNames, rtl);
-    registerDevices(pbase, 40, deviceSupportNames, devsl);
+    registerRecordTypes(pbase, 29, recordTypeNames, rtl);
+    registerDevices(pbase, 81, deviceSupportNames, devsl);
+    registerDrivers(pbase, 1, driverSupportNames, drvsl);
     (*pvar_func_asSub)();
+    (*pvar_func_devFrontendConfigure_RegisterCommands)();
+    (*pvar_func_drvAsynIPPortRegisterCommands)();
+    (*pvar_func_drvAsynIPServerPortRegisterCommands)();
+    (*pvar_func_asynRegister)();
+    (*pvar_func_asynInterposeFlushRegister)();
+    (*pvar_func_asynInterposeEosRegister)();
     iocshRegisterVariable(vardefs);
     return 0;
 }

@@ -12,8 +12,10 @@ PROD_IOC = PUC
 # PUC.dbd will be created and installed
 DBD += PUC.dbd
 
+
 # PUC.dbd will be made up from these files:
 PUC_DBD += base.dbd
+PUC_DBD += Frontend.dbd
 
 #PUC_DBD += portInclude.dbd
 
@@ -38,7 +40,6 @@ PUC_SRCS_vxWorks += -nil-
 PUC_LIBS += $(EPICS_BASE_IOC_LIBS)
 PUC_LIBS += asyn
 
-DB_INSTALLS += Frontend.dbd
 
 #===========================
 

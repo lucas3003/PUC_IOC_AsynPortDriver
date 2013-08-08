@@ -15,7 +15,7 @@ include $(TOP)/configure/CONFIG
 #DB += read.db
 #DB += write.db
 #DB += curve.db
-DB += frontendv0.db
+DB += frontend.db
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add

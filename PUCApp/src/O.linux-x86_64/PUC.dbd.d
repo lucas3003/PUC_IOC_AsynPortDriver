@@ -1,6 +1,7 @@
 # DO NOT EDIT: This file created by mkmf.pl,v 1.5 2002/03/25 21:33:24 jba Exp $ 
 
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/base.dbd
+../O.Common/PUC.dbd : ../Frontend.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/menuGlobal.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/menuConvert.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/aaiRecord.dbd
@@ -32,6 +33,7 @@
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/subArrayRecord.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/waveformRecord.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/devSoft.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/drvAsynIPPort.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/menuAlarmSevr.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/menuAlarmStat.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/menuCompress.dbd
@@ -44,6 +46,21 @@
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/menuSimm.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/menuYesNo.dbd
 ../O.Common/PUC.dbd : /home/igor/epics/base/dbd/dbCommon.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/asyn.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/asynRecord.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devEpics.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynOctet.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynInt32.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynInt8Array.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynInt16Array.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynInt32Array.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynInt32TimeSeries.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynFloat64.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynFloat32Array.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynFloat64Array.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynFloat64TimeSeries.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynUInt32Digital.dbd
+../O.Common/PUC.dbd : /home/igor/asyn/asyn4-21/dbd/devAsynRecord.dbd
 
 
 ../O.Common/PUCInclude.dbd : ../Makefile
