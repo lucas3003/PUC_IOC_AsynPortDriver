@@ -35,6 +35,8 @@
 #include "asynOctetSyncIO.h"
 #include "asynInt32.h"
 #include "asynFloat64.h"
+#include "asynCommonSyncIO.h"
+#include "asynStandardInterfaces.h"
 #include "drvAsynIPPort.h"
 #include "devFrontend.h"
 #include <epicsExport.h>
@@ -102,6 +104,38 @@
 /*
  * Readback values
  */
+
+
+/** Number of asyn parameters (asyn commands) this driver supports. */
+#define FRONTEND_N_PARAMS 6
+
+/** Specific asyn commands for this support module. These will be used and
+ * managed by the parameter library (part of areaDetector). */
+typedef enum FrontendParam_t {
+	//mjpg_quality      /** JPEG quality (int32 read/write) */ = NDPluginDriverLastParam,
+	t_setpoint         /** Temperature setpoint*/,
+	t_sensor1   /** Temeperature sensor 1*/,	
+	t_sensor2 /** Temperature sensor 2*/,	
+	t_sensor3 /** Temperature sensor 3*/,	
+	t_sensor4    /** Temeperature sensor 4*/,	
+	c1_switchstate      /** Switch state*/,			
+    FrontendLastParam
+} FrontendParam_t;
+
+typedef struct{
+	FrontendParam_t paramEnum;
+	char *paramString;
+}FrontendParamStruct;
+
+static FrontendParamStruct FrontendParam[FRONTEND_N_PARAMS] = {
+	{t_setpoint,      "T_SetPoint"},
+	{t_sensor1,         "T_Sensor1"},
+	{t_sensor2,  "T_Sensor2"},
+	{t_sensor3,   "T_Sensor3"},
+	{t_sensor4, "T_Sensor4"},
+	{c1_switchstate, "S_State"},
+};
+
 typedef struct a26xReadback {
     int    status;
     double setpointCurrent;
@@ -117,6 +151,7 @@ typedef struct FrontendPvt {
     asynInterface  asynCommon;     /* Our interfaces */
     asynInterface  asynInt32;
     asynInterface  asynFloat64;
+    asynInterface  asynDrvUser;
 
     a26xReadback   readback;       /* Most recent readback values */
     int            slewMode;       /* 0 or A26X_CONTROL_ENABLE_SLEW */
@@ -216,6 +251,57 @@ report(void *pvt, FILE *fp, int details)
         fprintf(fp, "       Bad reply count: %lu\n", ppvt->badReplyCount);
     }
 }
+
+static asynStatus
+drvUserCreate(void *drvPvt, asynUser *pasynUser,const char *drvInfo, const char **pptypeName, size_t *psize)
+{
+	int i;
+	//int offset;
+	char *pstring;
+	/* We are passed a string that identifies this command.
+	* Set dataType and/or pasynUser->reason based on this string */
+
+	/*for (i=0; i<FRONTEND_N_PARAMS; i++) {
+		if (epicsStrCaseCmp(drvInfo, pstring) == 0) {
+			pasynManager->getAddr(pasynUser, &offset);
+			if ((offset < 0) ) {
+				asynPrint(pPlc->pasynUserTrace, ASYN_TRACE_ERROR,"%s::drvUserCreate port %s invalid memory request %d, max=%d\n",driver, pPlc->portName, offset, pPlc->modbusLength);
+                		return asynError;
+            		}
+		pasynUser->reason = modbusDataCommand;
+		if (pptypeName) *pptypeName = epicsStrDup(MODBUS_DATA_STRING);
+		if (psize) *psize = sizeof(MODBUS_DATA_STRING);
+		asynPrint(pasynUser, ASYN_TRACE_FLOW,"%s::drvUserCreate, port %s data type=%s\n", driver, pPlc->portName, pstring);
+            return asynSuccess;
+		}
+	}*/
+
+	for (i=0; i<FRONTEND_N_PARAMS; i++) {
+		pstring = FrontendParam[i].paramString;
+		if (epicsStrCaseCmp(drvInfo, pstring) == 0) {
+			pasynUser->reason = FrontendParam[i].paramEnum;
+			if (pptypeName) *pptypeName = epicsStrDup(pstring);
+			if (psize) *psize = sizeof(FrontendParam[i].paramEnum);
+			asynPrint(pasynUser, ASYN_TRACE_FLOW,"drvUserCreate, command=%s\n", pstring);
+            		return asynSuccess;
+		}
+	}
+	asynPrint(pasynUser, ASYN_TRACE_ERROR,"drvUserCreate, unknown command=%s\n",drvInfo);
+	return asynError;
+}
+static asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser, const char **pptypeName, size_t *psize)
+{
+	int command = pasynUser->reason;
+	if (pptypeName)
+		*pptypeName = epicsStrDup(FrontendParam[command].paramString);
+	if(psize) *psize = sizeof(command);
+	return asynSuccess;
+}
+static asynStatus drvUserDestroy(void *drvPvt, asynUser *pasynUser){
+	return asynSuccess;
+}
+static asynDrvUser drvUser = { drvUserCreate,drvUserGetType, drvUserDestroy };
+
 
 static asynStatus
 connect(void *pvt, asynUser *pasynUser)
@@ -372,10 +458,11 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 	int size=4;
 	//char * write = com.writeVariable(0, sizeof(epicsFloat64), pasynUser->reason, (double) value, &bytesToWrite,simple);
 	result = (char *) malloc ((3+size)*sizeof(char));
+	int id = 0;
 	bytesToWrite = (3+size)*sizeof(char);
 	result[0] = 0x20;//WRITE_VARIABLE;
 	result[1] = (size)+1;
-	result[2] = (pasynUser->reason) & 0xFF;
+	result[2] = (id) & 0xFF;
 	union {
                	unsigned char c[8];
                	double f;
@@ -540,6 +627,15 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     ppvt->asynFloat64.pinterface = &float64Methods;
     ppvt->asynFloat64.drvPvt = ppvt;
     status = pasynManager->registerInterface(portName, &ppvt->asynFloat64);
+    if (status != asynSuccess) {
+        printf("Can't register asynFloat64 support.\n");
+        return -1;
+    }
+    
+    ppvt->asynDrvUser.interfaceType = asynDrvUserType;
+    ppvt->asynDrvUser.pinterface = &drvUser;
+    ppvt->asynDrvUser.drvPvt = ppvt;
+    status = pasynManager->registerInterface(portName, &ppvt->asynDrvUser);
     if (status != asynSuccess) {
         printf("Can't register asynFloat64 support.\n");
         return -1;
