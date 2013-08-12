@@ -23,6 +23,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsString.h>
@@ -161,6 +165,9 @@ typedef struct FrontendPvt {
     unsigned long  retryCount;
     unsigned long  noReplyCount;
     unsigned long  badReplyCount;
+
+    sllp_client_t *sllp;
+    struct sllp_vars_list *vars;
 
 #ifdef ENABLE_TIMING_TESTS
     double         transMax;
@@ -501,59 +508,32 @@ static asynStatus
 float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 {
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
-	printf("Read float64\n");
-	asynStatus status = asynError;
-	
-	size_t wrote;
-	
-	printf("Sending request to read\n");
-	
-	int bytesToWrite;
-	char *result;
- 	result = (char *) malloc(3*sizeof(char));
-	bytesToWrite = 3*sizeof(char);
-	result[0] = 0x10;//READ_VARIABLE;
-	result[1] = 1;
-	result[2] = (pasynUser->reason) & 0xFF;
-	printf("Send: %d | %d | %d \n", result[0], result[1], result[2] & 0xFF);	
-	
-	status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
-	
-	if(status != asynSuccess) return status;
-		
-	//Read response from PUC
-	//First, read the header, and after read the payload and checksum
-		
-	char * header;		
-	char * payload;
-	int size;
-		
-	size_t bytesRead;
-	int eomReason;
-		
-	header = (char *) malloc(2*sizeof(char));
-		
-	printf("Reading\n");
-	status = pasynOctetSyncIO->read(ppvt->pasynUser, header, 2, 5000, &bytesRead, &eomReason);		
-	if(status != asynSuccess) return status;
-				
-	size = header[1];
-	payload = (char *) malloc((size+1)*sizeof(char));
-		
-	status = pasynOctetSyncIO->read(ppvt->pasynUser, payload, size, 5000, &bytesRead, &eomReason);
-	if(status != asynSuccess) return status;
-	union {
-               	unsigned char c[8];
-               	double f;
-       	} u;
-	int i;
-	for(i = 0; i < size; i++)
+
+	uint8_t *val;
+	int raw = 0;
+	val = (uint8_t*) malloc(3*sizeof(char));
+
+	struct sllp_var * var = &ppvt->vars->list[pasynUser->reason];
+
+	if(sllp_read_var(ppvt->sllp, var, val))
 	{
-		u.c[i] =  payload[i];
+		return asynError;
 	}
-	*value = u.f;
-		
-	return status;
+
+	int i;
+
+	for(i=0; i<2; i++)
+	{
+		raw += val[i];
+		raw = raw << 8;		
+	}
+
+	//18 bits
+	float result = ((20*raw)/262143.0)-10;
+
+	*value = (epicsFloat64) result;
+
+	return asynSuccess;
 }
 
 static asynFloat64 float64Methods = { float64Write, float64Read };
@@ -571,6 +551,20 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
      */
     ppvt = callocMustSucceed(1, sizeof(FrontendPvt), "devFrontendConfigure");
     if (priority == 0) priority = epicsThreadPriorityMedium;
+
+    ppvt->sllp = sllp_client_new(send, receive);
+
+	if(!ppvt->sllp)
+	{
+		printf("SLLP fail\n");
+		return -1;
+	}
+
+	sllp_client_init(ppvt->sllp);
+	sllp_get_vars_list(ppvt->sllp, &ppvt->vars);
+
+	printf("SLLP initialized\n");
+
 
     /*
      * Create the port that we'll use for I/O.
