@@ -179,62 +179,81 @@ typedef struct FrontendPvt {
 /*
  * Send command and get reply
  */
-static asynStatus
-sendCommand(asynUser *pasynUser, FrontendPvt *ppvt, int command, double setpoint)
+uint8_t lastCommand;         
+int sendCommandtest(uint8_t *data, uint32_t *count)
 {
-    char sendBuf[80];
-    char replyBuf[80];
-    size_t nSend, nSent, nRecv;
-    int eom;
-    asynStatus status;
-    int retry = 0;
-#ifdef ENABLE_TIMING_TESTS
-    epicsTimeStamp ts[2];
-    double t;
-#endif
-
-    ppvt->commandCount++;
-    nSend = sprintf(sendBuf, "FDB:%2.2X:%.4f\r",
-                                    command | A26X_CONTROL_RESERVED, setpoint);
-    for (;;) {
-#       ifdef ENABLE_TIMING_TESTS
-        epicsTimeGetCurrent(&ts[0]);
-#       endif
-        status = pasynOctetSyncIO->writeRead(ppvt->pasynUser, sendBuf, nSend,
-                                             replyBuf, sizeof replyBuf - 1, 0.1,
-                                             &nSent, &nRecv, &eom);
-#       ifdef ENABLE_TIMING_TESTS
-        epicsTimeGetCurrent(&ts[1]);
-#       endif
-        if (status == asynSuccess)
-            break;
-        if (++retry > 10) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                                        "%s", ppvt->pasynUser->errorMessage);
-            ppvt->noReplyCount++;
-            return status;
+        if(*count < 256 && *count > 0)
+        {
+                int i;
+                printf("Count = %d\n", *count);
+ 
+                for(i = 0; i < *count; i++)
+                {
+                        printf("data[%d] = %02X\n", i, data[i]);
+                }
+ 
+                lastCommand = data[0];         
         }
-        ppvt->retryCount++;
-    }
-    replyBuf[nRecv] = '\0';
-    if (sscanf(replyBuf, "#FDB:%X:%lf:%lf", &ppvt->readback.status,
-                                            &ppvt->readback.setpointCurrent,
-                                            &ppvt->readback.readbackCurrent) != 3) {
-        char escBuf[80];
-        epicsStrnEscapedFromRaw(escBuf, sizeof escBuf, replyBuf, nRecv);
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                                          "Bad reply string: \"%s\"", escBuf);
-        ppvt->badReplyCount++;
-        return asynError;
-    }
-#ifdef ENABLE_TIMING_TESTS
-    t = epicsTimeDiffInSeconds(&ts[1], &ts[0]);
-    if (t > ppvt->transMax) ppvt->transMax = t;
-    ppvt->transAvg = ppvt->transAvg ? ppvt->transAvg * 0.998 + t * 0.002 : t;
-#endif
-    return asynSuccess;
+ 
+        return EXIT_SUCCESS;
 }
-
+int receiveCommandtest(uint8_t *data, uint32_t *count)
+{
+        printf("RECEIVE BEGIN\n");
+        uint8_t packet[5];
+        //bool flag = false;
+ 
+        //Simula uma variavel de leitura de tamanho 3 e uma variavel de escrita de tamanho 3
+       
+        if(lastCommand == 0x02)
+        {
+                //flag = true;
+                printf("Comando de listar variaveis\n");
+                packet[0] = 0x03;
+                packet[1] = 0x01;
+                packet[2] = 0x03;
+                //packet[3] = 0x83;
+                *count = 3;            
+        }
+ 
+        //Read simulation
+        else if(lastCommand == 0x10)
+        {
+                //flag = true;
+                printf("Comando de ler variavel\n");
+                packet[0] = 0x11;
+                packet[1] = 0x03;
+                packet[2] = 0x02;
+                packet[3] = 0xFF;
+                packet[4] = 0x0A;
+                *count = 5;
+        }
+ 
+        else if (lastCommand == 0x04)
+        {
+                //flag = true;
+                printf("Comando de listar grupos de variaveis\n");
+                packet[0] = 0x05;
+                packet[1] = 0x00;
+                *count = 2;
+        }
+ 
+        else if(lastCommand == 0x08)
+        {
+                //flag = true;
+                printf("Comando de listar curvas\n");
+ 
+                packet[0] = 0x09;
+                packet[1] = 0x00;
+                *count = 2;
+        }
+ 
+        //if(flag) memcpy(data, packet, *count);
+        memcpy(data, packet, *count);
+        printf("RECEIVE END\n");
+ 
+        return EXIT_SUCCESS;
+}
 /*
  * asynCommon methods
  */
@@ -552,7 +571,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     ppvt = callocMustSucceed(1, sizeof(FrontendPvt), "devFrontendConfigure");
     if (priority == 0) priority = epicsThreadPriorityMedium;
 
-    ppvt->sllp = sllp_client_new(send, receive);
+    ppvt->sllp = sllp_client_new(sendCommandtest, receiveCommandtest);
 
 	if(!ppvt->sllp)
 	{

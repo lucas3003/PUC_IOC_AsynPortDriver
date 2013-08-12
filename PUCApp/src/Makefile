@@ -28,6 +28,8 @@ PUC_DBD += Frontend.dbd
 # PUC_registerRecordDeviceDriver.cpp derives from PUC.dbd
 PUC_SRCS += PUC_registerRecordDeviceDriver.cpp
 PUC_SRCS += devFrontend.c
+PUC_SRCS += sllp_client.c
+
 
 # Build the main IOC entry point on workstation OSs.
 PUC_SRCS_DEFAULT += PUCMain.cpp
