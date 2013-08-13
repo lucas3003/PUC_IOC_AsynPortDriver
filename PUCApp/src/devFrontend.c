@@ -482,7 +482,7 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 	send = (uint8_t*) malloc(3*sizeof(char));
 
 	int i;
-	for(i = 0; i < 2; i++)
+	for(i = 2; i >= 0; i--)
 	{
 		send[i] = raw & 255;
 		raw = raw >> 8;
@@ -490,7 +490,7 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 
 	struct sllp_var * var = &ppvt->vars->list[pasynUser->reason];
 
-	if(sllp_write_var(sllp, var, send))
+	if(sllp_write_var(ppvt->sllp, var, send))
 	{
 		return asynError;
 	}
@@ -520,7 +520,7 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	for(i=0; i<3; i++)
 	{
 		raw = raw << 8;
-		raw += val[i];				
+		raw += val[i];
 	}
 
 	//18 bits
