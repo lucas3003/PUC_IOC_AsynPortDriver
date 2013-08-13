@@ -147,6 +147,8 @@ typedef struct a26xReadback {
     double readbackCurrent;
 } a26xReadback;
 
+asynUser *user;
+
 /*
  * Interposed layer private storage
  */
@@ -182,19 +184,21 @@ typedef struct FrontendPvt {
  */
 int sendCommandepics(uint8_t *data, uint32_t *count)
 {
+	printf("sendCommandepics\n");
 	asynStatus status;
 	size_t wrote;
-	status = pasynOctetSyncIO->write(NULL,(char *)data,*count,5000,&wrote);
+	status = pasynOctetSyncIO->write(user,(char *)data,*count,5000,&wrote);
 	if (status == asynSuccess)
 		return EXIT_SUCCESS;
 	return EXIT_SUCCESS;
 }
 int recvCommandepics(uint8_t *data, uint32_t *count)
 {
+	printf("recvCommandepics\n");
 	asynStatus status;
 	int eomReason;
 	size_t bread;
-	status = pasynOctetSyncIO->read(NULL,(char *)data,*count,5000,&bread,&eomReason);
+	status = pasynOctetSyncIO->read(user,(char *)data,*count,5000,&bread,&eomReason);
 	if (status == asynSuccess)
 		return EXIT_SUCCESS;
 	return EXIT_SUCCESS;
@@ -496,6 +500,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     char *lowerName, *host;
     asynStatus status;
 
+    printf("Configuration initiated\n");
     /*
      * Create our private data area
      */
@@ -503,7 +508,6 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     if (priority == 0) priority = epicsThreadPriorityMedium;
 
     ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
-
 	if(!ppvt->sllp)
 	{
 		printf("SLLP fail\n");
@@ -511,6 +515,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
 	}
 
 	sllp_client_init(ppvt->sllp);
+    printf("Configuration initiated\n");
 	sllp_get_vars_list(ppvt->sllp, &ppvt->vars);
 
 	printf("SLLP initialized\n");
@@ -548,6 +553,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
         return -1;
     }
 
+  
     /*
      * Advertise our interfaces
      */
@@ -584,6 +590,9 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
         printf("Can't register asynFloat64 support.\n");
         return -1;
     }
+    //TODO:remove!
+    user = ppvt->pasynUser;
+    printf("Configuration succeeded\n");
     return 0;
 }
 
