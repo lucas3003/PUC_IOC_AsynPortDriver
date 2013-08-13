@@ -473,54 +473,29 @@ static asynStatus
 float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 {
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
-	asynStatus status = asynError;
+	unsigned int raw;
+	uint8_t* send;
 	
-	//User can modify only the value
-	size_t wrote;
-	printf("Data writing\n");	
-	printf("Value = %f\n", value);
-	char *result;
-	int bytesToWrite;
-	int size=4;
-	//char * write = com.writeVariable(0, sizeof(epicsFloat64), pasynUser->reason, (double) value, &bytesToWrite,simple);
-	result = (char *) malloc ((3+size)*sizeof(char));
-	int id = 0;
-	bytesToWrite = (3+size)*sizeof(char);
-	result[0] = 0x20;//WRITE_VARIABLE;
-	result[1] = (size)+1;
-	result[2] = (id) & 0xFF;
-	union {
-               	unsigned char c[8];
-               	double f;
-        } u;
+	float val = (float) value;
+	raw = (unsigned int) ((val+10)*262143)/20.0;
+
+	send = (uint8_t*) malloc(3*sizeof(char));
+
 	int i;
-	u.f = value;
-	for(i = 0; i < 8; i++)
-	{	
-	result[3+i] = u.c[i];
+	for(i = 0; i < 2; i++)
+	{
+		send[i] = raw & 255;
+		raw = raw >> 8;
 	}
-	printf("Send:  %d | %d | %d | | %u\n", result[0], result[1], result[2], result[size+2] & 0xFF);
 
-	pasynOctetSyncIO->flush(ppvt->pasynUser);
-	status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
-		
-	if(status != asynSuccess) return status;
-		
-	//Read response from PUC		
-	//char * bufferRead;
-	//bufferRead = (char *) malloc(5*sizeof(char));
-		
-	//size_t bytesRead;
-	//int eomReason;
-		
-	//status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
-		
-	//if(status != asynSuccess) return status;
-		
-	//printf("Read: %d\n", bufferRead[2]);			
-	printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
+	struct sllp_var * var = &ppvt->vars->list[pasynUser->reason];
 
-	return status;
+	if(sllp_write_var(sllp, var, send))
+	{
+		return asynError;
+	}
+
+	return asynSuccess;
 }
 
 static asynStatus
@@ -529,10 +504,11 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
 
 	uint8_t *val;
-	int raw = 0;
+	unsigned int raw = 0;
 	val = (uint8_t*) malloc(3*sizeof(char));
 
 	struct sllp_var * var = &ppvt->vars->list[pasynUser->reason];
+	
 
 	if(sllp_read_var(ppvt->sllp, var, val))
 	{
@@ -541,10 +517,10 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 
 	int i;
 
-	for(i=0; i<2; i++)
+	for(i=0; i<3; i++)
 	{
-		raw += val[i];
-		raw = raw << 8;		
+		raw = raw << 8;
+		raw += val[i];				
 	}
 
 	//18 bits
