@@ -180,6 +180,25 @@ typedef struct FrontendPvt {
 /*
  * Send command and get reply
  */
+int sendCommandepics(uint8_t *data, uint32_t *count)
+{
+	asynStatus status;
+	size_t wrote;
+	status = pasynOctetSyncIO->write(NULL,(char *)data,*count,5000,&wrote);
+	if (status == asynSuccess)
+		return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
+}
+int recvCommandepics(uint8_t *data, uint32_t *count)
+{
+	asynStatus status;
+	int eomReason;
+	size_t bread;
+	status = pasynOctetSyncIO->read(NULL,(char *)data,*count,5000,&bread,&eomReason);
+	if (status == asynSuccess)
+		return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
+}
 uint8_t lastCommand;         
 int sendCommandtest(uint8_t *data, uint32_t *count)
 {
@@ -416,7 +435,7 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 	//size_t bytesRead;
 	//int eomReason;
 		
-	//status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
+	//strtus = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
 		
 	//if(status != asynSuccess) return status;
 		
@@ -443,7 +462,7 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	}
 	#ifdef BPM
 	double_value dn;
-
+	int i;
 	for(i=0;i<7;i++)
 	{
 		dn.vvalue[i] = val[i];
@@ -483,7 +502,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     ppvt = callocMustSucceed(1, sizeof(FrontendPvt), "devFrontendConfigure");
     if (priority == 0) priority = epicsThreadPriorityMedium;
 
-    ppvt->sllp = sllp_client_new(sendCommandtest, receiveCommandtest);
+    ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
 
 	if(!ppvt->sllp)
 	{
