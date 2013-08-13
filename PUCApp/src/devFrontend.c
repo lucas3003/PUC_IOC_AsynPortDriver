@@ -44,6 +44,7 @@
 #include "drvAsynIPPort.h"
 #include "devFrontend.h"
 #include <epicsExport.h>
+#include "unionConversion.h"
 
 /*
  * Bits in configure 'flags' argument
@@ -349,119 +350,40 @@ static asynStatus
 int32Write(void *pvt, asynUser *pasynUser, epicsInt32 value)
 {
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
-	asynStatus status = asynError;
-	
-	//User can modify only the value
-	size_t wrote;
-	printf("Data writing Int32\n");	
-		
-	int bytesToWrite;
-	
-	//TODO:USE THE PROTOCOL!
-	//TODO:USE nobts!
-	char *result;
-	result = (char *)malloc((3+1)*sizeof(char));
-	result[0] = 0x20;//WRITE_VARIABLE;
-	result[1] = 1+1;
-	result[2] = pasynUser->reason;
+	unsigned_int_32_value ui32v;
+	ui32v.ui32value = (uint32_t) value;
+	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	union {
-		unsigned char c[4];
-		epicsInt32 f;
-	} u;
-	u.f = value;
-	printf("epicsInt32Value: %d\n",u.f);
-	
-	int i = 0;
-	for(i = 0;i < 1; i++){
-		result[3+i] = u.c[i];
+	if(sllp_write_var(ppvt->sllp, var, ui32v.vvalue))
+	{
+		return asynError;
 	}
-	
-	for(i = 2;i < 7; i++)
-		printf("message %d\n",result[i]);
-	pasynOctetSyncIO->flush(ppvt->pasynUser);
-	status = pasynOctetSyncIO->write(ppvt->pasynUser, result, (3+1)*sizeof(char), 5000, &wrote);
-		
-	if(status != asynSuccess) return status;
-		
-	//Read response from PUC		
-	//char * bufferRead;
-	//bufferRead = (char *) malloc(5*sizeof(char));
-		
-	//size_t bytesRead;
-	//int eomReason;
-		
-	//status = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
-		
-	//if(status != asynSuccess) return status;
-		
-	//printf("Read: %d\n", bufferRead[2]);			
-	printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
-
-	return status;
+	return asynSuccess;
 }
 
 static asynStatus
 int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 {
+
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
-	printf("Read Int32");
-	asynStatus status = asynError;
+
+	uint8_t *val;
+	val = (uint8_t*) malloc(4*sizeof(char));
 	
-	size_t wrote;
-	
-	printf("Sending request to read: %d\n",pasynUser->reason);
-	
-	int bytesToWrite;
-	char *result;
-	result = (char *) malloc(3*sizeof(char));
-	bytesToWrite = 3*sizeof(char);
-		
-	result[0] = 0x10;//READ_VARIABLE
-	result[1] = 1;
-	result[2] = (pasynUser->reason) & 0xFF;
-	fflush(stdout);
-		
-	status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
-	
-	if(status != asynSuccess) return status;
-		
-	//Read response from PUC
-	//First, read the header, and after read the payload and checksum
-		
-	char * header;		
-	char * payload;
-	int size;
-		
-	size_t bytesRead;
-	int eomReason;
-		
-	header = (char *) malloc(2*sizeof(char));
-		
-	printf("Reading\n");
-	status = pasynOctetSyncIO->read(ppvt->pasynUser, header, 2, 5000, &bytesRead, &eomReason);		
-	if(status != asynSuccess) return status;
-				
-	size = header[1];
-	payload = (char *) malloc((size+1)*sizeof(char));
-		
-	status = pasynOctetSyncIO->read(ppvt->pasynUser, payload, size, 5000, &bytesRead, &eomReason);
-	if(status != asynSuccess) return status;
-	//TODO:NO THE BEST WAY TO DO THIS CONVERSION!!Use the protocol!	
-	union{
-		unsigned char c[4];
-		epicsInt32 inp_i;
-	}u;
-	u.inp_i = 0;
-	int i;
-	for(i=0;i<size;i++){
-		u.c[i] = payload[i];
+	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
+
+	if(sllp_read_var(ppvt->sllp, var, val))
+	{
+		return asynError;
 	}
-	*value = u.inp_i;
-	//*value = com.readingVariable(header, payload,simple);
+	unsigned_int_32_value ui32v;
+
+	ui32v.ui32value=0;
+	ui32v.vvalue[0] = val[0];
 	
+	*value = (epicsInt32) ui32v.ui32value;
 		
-	return status;
+	return asynSuccess;
 }
 
 static asynInt32 int32Methods = { int32Write, int32Read };
@@ -473,38 +395,19 @@ static asynStatus
 float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 {
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
-	asynStatus status = asynError;
-	
-	//User can modify only the value
-	size_t wrote;
-	printf("Data writing\n");	
-	printf("Value = %f\n", value);
-	char *result;
-	int bytesToWrite;
-	int size=4;
-	//char * write = com.writeVariable(0, sizeof(epicsFloat64), pasynUser->reason, (double) value, &bytesToWrite,simple);
-	result = (char *) malloc ((3+size)*sizeof(char));
-	int id = 0;
-	bytesToWrite = (3+size)*sizeof(char);
-	result[0] = 0x20;//WRITE_VARIABLE;
-	result[1] = (size)+1;
-	result[2] = (id) & 0xFF;
-	union {
-               	unsigned char c[8];
-               	double f;
-        } u;
-	int i;
-	u.f = value;
-	for(i = 0; i < 8; i++)
-	{	
-	result[3+i] = u.c[i];
-	}
-	printf("Send:  %d | %d | %d | | %u\n", result[0], result[1], result[2], result[size+2] & 0xFF);
+	float_value fv;
+	fv.fvalue = (double) value;
+	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	pasynOctetSyncIO->flush(ppvt->pasynUser);
-	status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
+	if(sllp_write_var(ppvt->sllp, var, fv.vvalue))
+	{
+		return asynError;
+	}
+
+	//pasynOctetSyncIO->flush(ppvt->pasynUser);
+	//status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
 		
-	if(status != asynSuccess) return status;
+	//if(status != asynSuccess) return status;
 		
 	//Read response from PUC		
 	//char * bufferRead;
@@ -518,9 +421,9 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 	//if(status != asynSuccess) return status;
 		
 	//printf("Read: %d\n", bufferRead[2]);			
-	printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
+	//printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
 
-	return status;
+	return asynSuccess;
 }
 
 static asynStatus
@@ -530,15 +433,24 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 
 	uint8_t *val;
 	int raw = 0;
-	val = (uint8_t*) malloc(3*sizeof(char));
+	val = (uint8_t*) malloc(8*sizeof(char));
 
-	struct sllp_var * var = &ppvt->vars->list[pasynUser->reason];
+	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
 	if(sllp_read_var(ppvt->sllp, var, val))
 	{
 		return asynError;
 	}
+	#ifdef BPM
+	double_value dn;
 
+	for(i=0;i<7;i++)
+	{
+		dn.vvalue[i] = val[i];
+	}
+	*value = (epicsFloat64) dn.dvalue;
+
+	#else
 	int i;
 
 	for(i=0; i<2; i++)
@@ -551,7 +463,7 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	float result = ((20*raw)/262143.0)-10;
 
 	*value = (epicsFloat64) result;
-
+	#endif
 	return asynSuccess;
 }
 
