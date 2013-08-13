@@ -432,8 +432,8 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
 
 	uint8_t *val;
-	int raw = 0;
-	val = (uint8_t*) malloc(8*sizeof(char));
+	unsigned int raw = 0;
+	val = (uint8_t*) malloc(3*sizeof(char));
 
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
@@ -453,7 +453,7 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	#else
 	int i;
 
-	for(i=0; i<2; i++)
+	for(i=0; i<3; i++)
 	{
 		raw += val[i];
 		raw = raw << 8;		
