@@ -8,6 +8,7 @@
 #ifndef asynInterposeCom_H
 #define asynInterposeCom_H
 #define BPM
+#define DEBUG
 #include "sllp_client.h"
 #include <shareLib.h>
 #include <epicsExport.h>

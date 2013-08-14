@@ -184,7 +184,9 @@ typedef struct FrontendPvt {
  */
 int sendCommandepics(uint8_t *data, uint32_t *count)
 {
+    #ifdef DEBUG
 	printf("sendCommandepics\n");
+    #endif
 	asynStatus status;
 	size_t wrote;
 	status = pasynOctetSyncIO->write(user,(char *)data,*count,5000,&wrote);
@@ -194,7 +196,9 @@ int sendCommandepics(uint8_t *data, uint32_t *count)
 }
 int recvCommandepics(uint8_t *data, uint32_t *count)
 {
+    #ifdef DEBUG
 	printf("recvCommandepics\n");
+    #endif
 	asynStatus status;
 	int eomReason;
 	size_t bread;
@@ -206,6 +210,9 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
 uint8_t lastCommand;         
 int sendCommandtest(uint8_t *data, uint32_t *count)
 {
+        #ifdef DEBUG
+        printf("sendCommandtest");
+        #endif
         if(*count < 256 && *count > 0)
         {
                 int i;
@@ -223,21 +230,26 @@ int sendCommandtest(uint8_t *data, uint32_t *count)
 }
 int receiveCommandtest(uint8_t *data, uint32_t *count)
 {
+        #ifdef DEBUG
         printf("RECEIVE BEGIN\n");
-        uint8_t packet[5];
+        #endif
+        uint8_t packet[8];
         //bool flag = false;
  
         //Simula uma variavel de leitura de tamanho 3 e uma variavel de escrita de tamanho 3
        
         if(lastCommand == 0x02)
         {
-                //flag = true;
-                printf("Comando de listar variaveis\n");
-                packet[0] = 0x03;
-                packet[1] = 0x01;
-                packet[2] = 0x03;
-                //packet[3] = 0x83;
-                *count = 3;            
+            printf("Comando de listar variaveis\n");
+            packet[0] = 0x03;
+            packet[1] = 0x06;       
+            packet[2] = 0x83;
+            packet[3] = 0x03;
+            packet[4] = 0x03;
+            packet[5] = 0x03;
+            packet[6] = 0x03;
+            packet[7] = 0x83;
+            *count = 8;          
         }
  
         //Read simulation
@@ -274,7 +286,9 @@ int receiveCommandtest(uint8_t *data, uint32_t *count)
  
         //if(flag) memcpy(data, packet, *count);
         memcpy(data, packet, *count);
+        #ifdef DEBUG
         printf("RECEIVE END\n");
+        #endif
  
         return EXIT_SUCCESS;
 }
@@ -500,26 +514,14 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     char *lowerName, *host;
     asynStatus status;
 
+    #ifdef DEBUG
     printf("Configuration initiated\n");
+    #endif
     /*
      * Create our private data area
      */
     ppvt = callocMustSucceed(1, sizeof(FrontendPvt), "devFrontendConfigure");
     if (priority == 0) priority = epicsThreadPriorityMedium;
-
-    ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
-	if(!ppvt->sllp)
-	{
-		printf("SLLP fail\n");
-		return -1;
-	}
-
-	sllp_client_init(ppvt->sllp);
-    printf("Configuration initiated\n");
-	sllp_get_vars_list(ppvt->sllp, &ppvt->vars);
-
-	printf("SLLP initialized\n");
-
 
     /*
      * Create the port that we'll use for I/O.
@@ -539,6 +541,26 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     }
     free(host);
     free(lowerName);
+
+    //TODO:remove!
+    user = ppvt->pasynUser;
+
+    //ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
+    ppvt->sllp = sllp_client_new(sendCommandtest, receiveCommandtest);
+    
+    if(!ppvt->sllp)
+    {
+        printf("SLLP fail\n");
+        return -1;
+    }
+
+    sllp_client_init(ppvt->sllp);
+    sllp_get_vars_list(ppvt->sllp, &ppvt->vars);
+
+    #ifdef DEBUG
+    printf("SLLP initialized\n");
+    #endif
+
 
     /*
      * Create our port
@@ -590,9 +612,11 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
         printf("Can't register asynFloat64 support.\n");
         return -1;
     }
-    //TODO:remove!
-    user = ppvt->pasynUser;
+
+    #ifdef DEBUG
     printf("Configuration succeeded\n");
+    #endif
+    
     return 0;
 }
 
