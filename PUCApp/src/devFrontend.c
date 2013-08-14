@@ -391,7 +391,7 @@ int32Write(void *pvt, asynUser *pasynUser, epicsInt32 value)
 	ui32v.ui32value = (uint32_t) value;
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	if(sllp_write_var(ppvt->sllp, var, ui32v.vvalue))
+	if(sllp_write_var(ppvt->sllp, var, ui32v.vvalue)!=SLLP_SUCCESS)
 	{
 		return asynError;
 	}
@@ -409,7 +409,7 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 	
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	if(sllp_read_var(ppvt->sllp, var, val))
+	if(sllp_read_var(ppvt->sllp, var, val)!=SLLP_SUCCESS)
 	{
 		return asynError;
 	}
@@ -436,7 +436,7 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 	fv.fvalue = (double) value;
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	if(sllp_write_var(ppvt->sllp, var, fv.vvalue))
+	if(sllp_write_var(ppvt->sllp, var, fv.vvalue)!=SLLP_SUCCESS)
 	{
 		return asynError;
 	}
@@ -474,7 +474,7 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	if(sllp_read_var(ppvt->sllp, var, val))
+	if(sllp_read_var(ppvt->sllp, var, val)!=SLLP_SUCCESS)
 	{
 		return asynError;
 	}
@@ -545,17 +545,23 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     //TODO:remove!
     user = ppvt->pasynUser;
 
-    //ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
-    ppvt->sllp = sllp_client_new(sendCommandtest, receiveCommandtest);
+    ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
+    //ppvt->sllp = sllp_client_new(sendCommandtest, receiveCommandtest);
     
-    if(!ppvt->sllp)
+    if (!ppvt->sllp)
     {
         printf("SLLP fail\n");
         return -1;
     }
 
-    sllp_client_init(ppvt->sllp);
-    sllp_get_vars_list(ppvt->sllp, &ppvt->vars);
+    if (sllp_client_init(ppvt->sllp)!=SLLP_SUCCESS){
+	printf("Client initialization error\n");
+        return asynError;
+    }
+
+    if (sllp_get_vars_list(ppvt->sllp, &ppvt->vars)!=SLLP_SUCCESS){
+        printf("Variable listing error\n");
+    }
 
     #ifdef DEBUG
     printf("SLLP initialized\n");
