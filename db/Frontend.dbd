@@ -1,2 +1,0 @@
-registrar(devFrontendConfigure_RegisterCommands)
-include "drvAsynIPPort.dbd"

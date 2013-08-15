@@ -432,14 +432,32 @@ static asynStatus
 float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 {
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
-	float_value fv;
-	fv.fvalue = (double) value;
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	if(sllp_write_var(ppvt->sllp, var, fv.vvalue)!=SLLP_SUCCESS)
-	{
-		return asynError;
-	}
+    #ifdef BPM
+
+    float_value fv;
+    fv.fvalue = (double) value;
+    if(sllp_write_var(ppvt->sllp, var, fv.vvalue)!=SLLP_SUCCESS)
+    {
+        return asynError;
+    }
+    #elif defined PUC
+    unsigned int raw = (unsigned int) (((double)value+10)*262143)/20.0;
+    int i;
+    uint8_t* buf;
+    buf = (uint8_t*) malloc(3*sizeof(char));
+
+    for(i = 2; i >= 0; i--)
+    {
+        buf[i] = raw & 0xFF;
+        raw >> 8;
+    }
+
+    if(sllp_write_var(ppvt->sllp, var, buf) != SLLP_SUCCESS) return asynError;
+    #endif
+
+
 
 	//pasynOctetSyncIO->flush(ppvt->pasynUser);
 	//status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
@@ -487,7 +505,7 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	}
 	*value = (epicsFloat64) dn.dvalue;
 
-	#else
+	#elif defined PUC
 	int i;
 
 	for(i=0; i<3; i++)
