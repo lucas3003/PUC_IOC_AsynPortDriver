@@ -371,11 +371,11 @@ enum sllp_err sllp_client_init(sllp_client_t *client)
     if((err = update_vars_list(client)))
         return err;
 
-    //if((err = update_groups_list(client)))
-        //return err;
+    if((err = update_groups_list(client)))
+        return err;
 
-    //if((err = update_curves_list(client)))
-        //return err;
+    if((err = update_curves_list(client)))
+        return err;
 
     client->initialized = true;
     return SLLP_SUCCESS;

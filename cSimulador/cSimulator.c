@@ -143,6 +143,7 @@ int main (){
 	printf("server established connection with %s (%s)\n", 
 	hostp->h_name, hostaddrp);
 	clientlen = sizeof(clientaddr);
+	uint8_t bufresponse[BUFSIZE];
 	struct sllp_raw_packet request;
 	struct sllp_raw_packet response;
 	while (1) {
@@ -158,6 +159,9 @@ int main (){
     		
 		request.data = buf;
 		request.len = n;
+
+		response.data = bufresponse;
+		
 		sllp_process_packet (sllp,&request,&response);
 		/* 
 		* write: echo the input string back to the client 
@@ -166,8 +170,8 @@ int main (){
 		if (n < 0) 
 			error("ERROR writing to socket");
 	
-		close(childfd);
 	}
+		close(childfd);
 	return 0;
 }
 
