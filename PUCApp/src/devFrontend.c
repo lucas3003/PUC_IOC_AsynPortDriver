@@ -201,6 +201,8 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
     #endif
 	asynStatus status;
 	int eomReason;
+	*count = 250;
+	//data = (uint8_t*)malloc(sizeof(uint8_t)*250);
 	size_t bread;
 	status = pasynOctetSyncIO->read(user,(char *)data,*count,5000,&bread,&eomReason);
 	if (status == asynSuccess)
@@ -571,9 +573,9 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
         printf("SLLP fail\n");
         return -1;
     }
-
-    if (sllp_client_init(ppvt->sllp)!=SLLP_SUCCESS){
-	printf("Client initialization error\n");
+    enum sllp_err err;
+    if (err = sllp_client_init(ppvt->sllp)!=SLLP_SUCCESS){
+	printf("Client initialization error: %d\n",err);
         return asynError;
     }
 

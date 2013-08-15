@@ -27,37 +27,37 @@ int main (){
 
 	err = sllp_register_variable(sllp,&dummy[0]);
 	
-	dummy[1].info.id = 0;
+	dummy[1].info.id = 1;
 	dummy[1].info.writable = true;
 	dummy[1].info.size = 8;
 	dummy[1].data = dble;
 	
 	err = sllp_register_variable(sllp,&dummy[1]);
 	
-	dummy[2].info.id = 0;
+	dummy[2].info.id = 2;
 	dummy[2].info.writable = true;
 	dummy[2].info.size = 8;
 	dummy[2].data = dble;
 	
 	err = sllp_register_variable(sllp,&dummy[2]);
 	
-	dummy[3].info.id = 0;
+	dummy[3].info.id = 3;
 	dummy[3].info.writable = true;
 	dummy[3].info.size = 8;
 	dummy[3].data = dble;
 	
 	err = sllp_register_variable(sllp,&dummy[3]);
 	
-	dummy[4].info.id = 0;
+	dummy[4].info.id = 4;
 	dummy[4].info.writable = true;
 	dummy[4].info.size = 8;
 	dummy[4].data = dble;
 	
 	err = sllp_register_variable(sllp,&dummy[4]);
 	
-	dummy[5].info.id = 0;
+	dummy[5].info.id = 5;
 	dummy[5].info.writable = true;
-	dummy[5].info.size = 8;
+	dummy[5].info.size = 1;
 	dummy[5].data = mb;
 	
 	err = sllp_register_variable(sllp,&dummy[5]);
@@ -126,6 +126,7 @@ int main (){
 	/* 
 	* accept: wait for a connection request 
 	*/
+	clientlen = sizeof(clientaddr);
 	childfd = accept(parentfd, (struct sockaddr *) &clientaddr, &clientlen);
 	if (childfd < 0) 
 		error("ERROR on accept");
@@ -142,10 +143,10 @@ int main (){
 		error("ERROR on inet_ntoa\n");
 	printf("server established connection with %s (%s)\n", 
 	hostp->h_name, hostaddrp);
-	clientlen = sizeof(clientaddr);
 	uint8_t bufresponse[BUFSIZE];
 	struct sllp_raw_packet request;
 	struct sllp_raw_packet response;
+	int i =0;
 	while (1) {
     
 		/* 
@@ -155,8 +156,8 @@ int main (){
 		n = read(childfd, buf, BUFSIZE);
 		if (n < 0) 
 			error("ERROR reading from socket");
-		printf("server received %d bytes: %s", n, buf);
-    		
+		printf("server received %d bytes: b[0]=%d b[1]=%d\n",n,buf[0],buf[1]);
+	
 		request.data = buf;
 		request.len = n;
 
@@ -170,6 +171,10 @@ int main (){
 		if (n < 0) 
 			error("ERROR writing to socket");
 	
+		printf("server sent %d bytes: ", n);
+		for(i=0;i<response.len;i++)
+			printf("%d ",response.data[i]);		
+		printf("\n");
 	}
 		close(childfd);
 	return 0;
