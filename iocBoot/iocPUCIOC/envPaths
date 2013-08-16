@@ -1,0 +1,5 @@
+epicsEnvSet("ARCH","linux-x86_64")
+epicsEnvSet("IOC","iocPUCIOC")
+epicsEnvSet("TOP","/home/igor/frontend_puc/aux/sllp_epics")
+epicsEnvSet("EPICS_BASE","/home/igor/epics/base")
+epicsEnvSet("ASYN","/home/igor/asyn/asyn4-21")
