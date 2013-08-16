@@ -46,78 +46,12 @@
 #include <epicsExport.h>
 #include "unionConversion.h"
 
-/*
- * Bits in configure 'flags' argument
- */
-#define FLAG_SHOULD_INHIBIT_READBACK    0x1
-
-/*
- * asynFloat64 subaddresses
- */
-#define A_READ_SETPOINT_CURRENT          0
-#define A_READ_READBACK_CURRENT          1
-#define A_WRITE_SETPOINT_CURRENT         100
-
-/*
- * asynInt32 subaddresses
- */
-#define A_READ_POWER_ON             1
-#define A_READ_GENERIC_FAULT        2
-#define A_READ_DC_UNDER_V           3
-#define A_READ_MOSFET_OVER_T        4
-#define A_READ_SHUNT_OVER_T         5
-#define A_READ_INTERLOCK            6
-#define A_READ_INPUT_OVER_I         7
-#define A_READ_CROWBAR              8
-#define A_READ_SLEW_MODE            9
-#define A_READ_FORCE_READBACK       99
-#define A_WRITE_POWER_ON            100
-#define A_WRITE_RESET               101
-#define A_WRITE_SLEW_MODE           102
-
-/*
- * Control byte bit assignmentss
- */
-#define A26X_CONTROL_RESERVED      0x1    /* Must be set in all commands */
-#define A26X_CONTROL_ENABLE_SLEW   0x10   /* Enable slew-rate limiting */
-#define A26X_CONTROL_RESET_ERRORS  0x20   /* Reset latched errors */
-#define A26X_CONTROL_POWER_ON      0x40   /* Turn supply on */
-#define A26X_CONTROL_READBACK_ONLY 0x80   /* Perform readback only */
-
-/*
- * Status byte bit assignmentss
- */
-#define A26X_STATUS_POWER_ON      0x1    /* Supply is on */
-#define A26X_STATUS_GENERIC_FAULT 0x2    /* Generic fault (hw error) */
-#define A26X_STATUS_DC_UNDER_V    0x4    /* DC undervoltage */
-#define A26X_STATUS_MOSFET_OVER_T 0x8    /* MOSFET overtemp */
-#define A26X_STATUS_SHUNT_OVER_T  0x10   /* Shunt overtemp */
-#define A26X_STATUS_INTERLOCK     0x20   /* Interlock chain broken */
-#define A26X_STATUS_INPUT_OVER_I  0x40   /* Input overcurrent */
-#define A26X_STATUS_CROWBAR       0x80   /* Crowbar (short circuit protect) */
-
-/*
- * Supply slew rate (Amps/sec)
- */
-#define A26X_SLEW_RATE  20
-
-/*
- * Conditional-compile control
- */
-/* #define ENABLE_TIMING_TESTS 1 */
-
-/*
- * Readback values
- */
-
-
 /** Number of asyn parameters (asyn commands) this driver supports. */
 #define FRONTEND_N_PARAMS 6
 
 /** Specific asyn commands for this support module. These will be used and
  * managed by the parameter library (part of areaDetector). */
 typedef enum FrontendParam_t {
-	//mjpg_quality      /** JPEG quality (int32 read/write) */ = NDPluginDriverLastParam,
 	t_setpoint         /** Temperature setpoint*/,
 	t_sensor1   /** Temeperature sensor 1*/,	
 	t_sensor2 /** Temperature sensor 2*/,	
@@ -141,12 +75,6 @@ static FrontendParamStruct FrontendParam[FRONTEND_N_PARAMS] = {
 	{c1_switchstate, "S_State"},
 };
 
-typedef struct a26xReadback {
-    int    status;
-    double setpointCurrent;
-    double readbackCurrent;
-} a26xReadback;
-
 asynUser *user;
 
 /*
@@ -160,22 +88,14 @@ typedef struct FrontendPvt {
     asynInterface  asynFloat64;
     asynInterface  asynDrvUser;
 
-    a26xReadback   readback;       /* Most recent readback values */
-    int            slewMode;       /* 0 or A26X_CONTROL_ENABLE_SLEW */
-
-    unsigned long  commandCount;    /* Statistics */
-    unsigned long  setpointUpdateCount;
-    unsigned long  retryCount;
-    unsigned long  noReplyCount;
-    unsigned long  badReplyCount;
+    unsigned long commandCount;
+    unsigned long setpointUpdateCount;
+    unsigned long retryCount;
+    unsigned long noReplyCount;
+    unsigned long badReplyCount;
 
     sllp_client_t *sllp;
     struct sllp_vars_list *vars;
-
-#ifdef ENABLE_TIMING_TESTS
-    double         transMax;
-    double         transAvg;
-#endif
 
 } FrontendPvt;
 
@@ -237,6 +157,8 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
     *count = size+2;
 
     memcpy(data, packet, *count);
+    free(header);
+    free(payload);
 
     return EXIT_SUCCESS;
 }
@@ -452,7 +374,7 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 	ui32v.vvalue[0] = val[0];
 	
 	*value = (epicsInt32) ui32v.ui32value;
-		
+	free(val);	
 	return asynSuccess;
 }
 
@@ -487,28 +409,8 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
     }
 
     if(sllp_write_var(ppvt->sllp, var, buf) != SLLP_SUCCESS) return asynError;
+    free(buf);
     #endif
-
-
-
-	//pasynOctetSyncIO->flush(ppvt->pasynUser);
-	//status = pasynOctetSyncIO->write(ppvt->pasynUser, result, bytesToWrite, 5000, &wrote);
-		
-	//if(status != asynSuccess) return status;
-		
-	//Read response from PUC		
-	//char * bufferRead;
-	//bufferRead = (char *) malloc(5*sizeof(char));
-		
-	//size_t bytesRead;
-	//int eomReason;
-		
-	//strtus = pasynOctetSyncIO->read(user, bufferRead, 5, 5000, &bytesRead, &eomReason);
-		
-	//if(status != asynSuccess) return status;
-		
-	//printf("Read: %d\n", bufferRead[2]);			
-	//printf("Write: %d, Wrote: %li \n", bytesToWrite, wrote);	
 
 	return asynSuccess;
 }
@@ -543,6 +445,7 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	float result = ((20*raw)/262143.0)-10;
 
 	*value = (epicsFloat64) result;
+	free(val);
 	#endif
 	return asynSuccess;
 }
@@ -589,7 +492,6 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     user = ppvt->pasynUser;
 
     ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
-    //ppvt->sllp = sllp_client_new(sendCommandtest, receiveCommandtest);
     
     if (!ppvt->sllp)
     {
