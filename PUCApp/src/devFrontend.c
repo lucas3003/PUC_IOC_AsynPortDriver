@@ -94,6 +94,8 @@ typedef struct FrontendPvt {
     unsigned long noReplyCount;
     unsigned long badReplyCount;
 
+    char *serverAddress;
+
     sllp_client_t *sllp;
     struct sllp_vars_list *vars;
 
@@ -348,6 +350,8 @@ int32Write(void *pvt, asynUser *pasynUser, epicsInt32 value)
 
 	if(sllp_write_var(ppvt->sllp, var, ui32v.vvalue)!=SLLP_SUCCESS)
 	{
+    		if( pasynOctetSyncIO->connect(ppvt->serverAddress, -1, &ppvt->pasynUser, NULL) != asynSuccess)
+			printf("SERVER DISCONNECTED\n");
 		return asynError;
 	}
 	return asynSuccess;
@@ -366,6 +370,8 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 
 	if(sllp_read_var(ppvt->sllp, var, val)!=SLLP_SUCCESS)
 	{
+    		if( pasynOctetSyncIO->connect(ppvt->serverAddress, -1, &ppvt->pasynUser, NULL) != asynSuccess)
+			printf("SERVER DISCONNECTED\n");
 		return asynError;
 	}
 	unsigned_int_32_value ui32v;
@@ -394,6 +400,8 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 	dv.dvalue = (double) value;
 	if(sllp_write_var(ppvt->sllp, var, dv.vvalue)!=SLLP_SUCCESS)
 	{
+    		if( pasynOctetSyncIO->connect(ppvt->serverAddress, -1, &ppvt->pasynUser, NULL) != asynSuccess)
+			printf("SERVER DISCONNECTED\n");
 		return asynError;
 	}
     #elif defined PUC
@@ -426,6 +434,8 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	double_value dn;
 	if(sllp_read_var(ppvt->sllp, var, dn.vvalue)!=SLLP_SUCCESS)
 	{
+    		if( pasynOctetSyncIO->connect(ppvt->serverAddress, -1, &ppvt->pasynUser, NULL) != asynSuccess)
+			printf("SERVER DISCONNECTED\n");
 		return asynError;
 	}
 	*value = (epicsFloat64) dn.dvalue;
@@ -481,6 +491,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     sprintf(host, "%s TCP", hostInfo);
     drvAsynIPPortConfigure(lowerName, host, priority, 0, 1);
     status = pasynOctetSyncIO->connect(lowerName, -1, &ppvt->pasynUser, NULL);
+    ppvt->serverAddress = lowerName;
     if (status != asynSuccess) {
         printf("Can't connect to \"%s\"\n", lowerName);
         return -1;
