@@ -3,7 +3,7 @@ from random import *
 
 class BPM(Super):
 	def __init__(self):
-		Super('127.0.0.1', 6543, self.handler)
+		Super('127.0.0.1', 6791, self.handler)
 
 	def handler(self, clientsock, addr):
 		while 1:

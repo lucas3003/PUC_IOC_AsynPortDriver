@@ -199,15 +199,46 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
     #ifdef DEBUG
 	printf("recvCommandepics\n");
     #endif
-	asynStatus status;
-	int eomReason;
-	*count = 250;
-	//data = (uint8_t*)malloc(sizeof(uint8_t)*250);
-	size_t bread;
-	status = pasynOctetSyncIO->read(user,(char *)data,*count,5000,&bread,&eomReason);
-	if (status == asynSuccess)
-		return EXIT_SUCCESS;
-	return EXIT_SUCCESS;
+
+    asynStatus status;
+    int eomReason;
+    size_t bread;
+    uint8_t packet[17000];
+    size_t size;
+
+    uint8_t* header;
+    header = (uint8_t*) malloc(2*sizeof(char));
+
+    status = pasynOctetSyncIO->read(user, (char*) header, 2, 5000, &bread, &eomReason);
+    if(status != asynSuccess) printf("Error reading header\n"); //TODO: Return error;
+
+    if(header[1] == 255)
+
+        size = 16386;
+    else
+        size = header[1];
+
+    uint8_t* payload;
+    //printf("Size = %u\n", size);
+    payload = (uint8_t*) malloc(size*sizeof(char));
+
+    if(size > 0)
+    {
+        status = pasynOctetSyncIO->read(user, (char *)payload, size, 5000, &bread, &eomReason);
+        int err;
+        if(err = (status != asynSuccess)) printf("Error %d reading payload\n", err); //TODO: Return error;        
+    }
+
+
+    memcpy(packet, header, 2);
+
+    if(size > 0) memcpy(packet+2, payload, size);
+
+    *count = size+2;
+
+    memcpy(data, packet, *count);
+
+    return EXIT_SUCCESS;
 }
 uint8_t lastCommand;         
 int sendCommandtest(uint8_t *data, uint32_t *count)
