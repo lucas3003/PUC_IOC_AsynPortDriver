@@ -28,28 +28,28 @@ int main (){
 	err = sllp_register_variable(sllp,&dummy[0]);
 	
 	dummy[1].info.id = 1;
-	dummy[1].info.writable = true;
+	dummy[1].info.writable = false;
 	dummy[1].info.size = 8;
 	dummy[1].data = dble;
 	
 	err = sllp_register_variable(sllp,&dummy[1]);
 	
 	dummy[2].info.id = 2;
-	dummy[2].info.writable = true;
+	dummy[2].info.writable = false;
 	dummy[2].info.size = 8;
 	dummy[2].data = dble;
 	
 	err = sllp_register_variable(sllp,&dummy[2]);
 	
 	dummy[3].info.id = 3;
-	dummy[3].info.writable = true;
+	dummy[3].info.writable = false;
 	dummy[3].info.size = 8;
 	dummy[3].data = dble;
 	
 	err = sllp_register_variable(sllp,&dummy[3]);
 	
 	dummy[4].info.id = 4;
-	dummy[4].info.writable = true;
+	dummy[4].info.writable = false;
 	dummy[4].info.size = 8;
 	dummy[4].data = dble;
 	
@@ -153,6 +153,7 @@ int main (){
 		* read: read input string from the client
 		*/
 		bzero(buf, BUFSIZE);
+		bzero(bufresponse, BUFSIZE);
 		n = read(childfd, buf, BUFSIZE);
 		if (n < 0) 
 			error("ERROR reading from socket");

@@ -468,13 +468,12 @@ float64Write(void *pvt, asynUser *pasynUser, epicsFloat64 value)
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
     #ifdef BPM
-
-    float_value fv;
-    fv.fvalue = (double) value;
-    if(sllp_write_var(ppvt->sllp, var, fv.vvalue)!=SLLP_SUCCESS)
-    {
-        return asynError;
-    }
+	double_value dv;
+	dv.dvalue = (double) value;
+	if(sllp_write_var(ppvt->sllp, var, dv.vvalue)!=SLLP_SUCCESS)
+	{
+		return asynError;
+	}
     #elif defined PUC
     unsigned int raw = (unsigned int) (((double)value+10)*262143)/20.0;
     int i;
@@ -519,28 +518,21 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 {
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
 
-	uint8_t *val;
-	unsigned int raw = 0;
-	val = (uint8_t*) malloc(3*sizeof(char));
-
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	if(sllp_read_var(ppvt->sllp, var, val)!=SLLP_SUCCESS)
-	{
-		return asynError;
-	}
 	#ifdef BPM
 	double_value dn;
-	int i;
-	for(i=0;i<7;i++)
+	if(sllp_read_var(ppvt->sllp, var, dn.vvalue)!=SLLP_SUCCESS)
 	{
-		dn.vvalue[i] = val[i];
+		return asynError;
 	}
 	*value = (epicsFloat64) dn.dvalue;
 
 	#elif defined PUC
 	int i;
-
+	uint8_t *val;
+	unsigned int raw = 0;
+	val = (uint8_t*) malloc(3*sizeof(char));
 	for(i=0; i<3; i++)
 	{
 		raw += val[i];
