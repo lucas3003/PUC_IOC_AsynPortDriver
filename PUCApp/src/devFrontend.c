@@ -509,14 +509,18 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	uint8_t *val;
 	unsigned int raw = 0;
 	val = (uint8_t*) malloc(3*sizeof(char));
-	for(i=0; i<3; i++)
+    sllp_read_var(ppvt->sllp, var, val);
+	for(i=0; i < 3; i++)
 	{
-		raw += val[i];
-		raw = raw << 8;		
+        raw = raw << 8;
+		raw += val[i];			
 	}
+
+    printf("Raw = %u\n", raw);
 
 	//18 bits
 	float result = ((20*raw)/262143.0)-10;
+    printf("Result = %f\n", result);
 
 	*value = (epicsFloat64) result;
 	free(val);

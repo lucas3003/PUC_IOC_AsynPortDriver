@@ -13,6 +13,11 @@ class PUC(Super):
 			cs = cs + packet[i]
 
 		cs = 0x100 - (cs&0xFF)
+
+		if cs == 0x100: 
+			cs = 0
+
+		
 		return cs
 
 
@@ -38,30 +43,25 @@ class PUC(Super):
 				packet = [0x00, self.address, 0x03, 0x06, 0x83, 0x03, 0x03, 0x03, 0x03, 0x83]
 
 
-				packet.append(self.checksum(packet))
-
-
 			if command == 0x04:
 				#Simulate "list group var" command
 				packet = [0x00, self.address, 0x05, 0x00]
-				packet.append(self.checksum(packet))
+				
 
 			if command == 0x08:
 				#Simulate "list curves" command
 				packet = [0x00, self.address, 0x09, 0x00]
-				packet.append(self.checksum(packet))
-
 
 			if command == 0x10:
 				#Simulate response of 18 bits
-				packet = [0x00, self.address, 0x11, 0x03, randint(0,3), randint(0,255), randint(0,255)]
-				packet.append(self.checksum(packet))
+				packet = [0x00, self.address, 0x11, 0x03, randint(0,3), randint(0,255), randint(0,255)]				
 
 			if command == 0x20:
 				#Simulate a sucesfull write
 				packet = [0x00, self.address, 0xE0, 0x00]
-				packet.append(self.checksum(packet))
 
+			packet.append(self.checksum(packet))
+			print packet				
 			response = bytearray(packet)
 			clientsock.send(response)
 			print "Response send"
