@@ -104,7 +104,7 @@ typedef struct FrontendPvt {
 /*
  * Send command and get reply
  */
-int sendCommandepics(uint8_t *data, uint32_t *count)
+int sendCommandEPICS(uint8_t *data, uint32_t count)
 {
     #ifdef DEBUG
     printf("send\n");  
@@ -161,7 +161,7 @@ int sendPUC(uint8_t *data, uint32_t *count)
 #endif
 
 
-int recvCommandepics(uint8_t *data, uint32_t *count)
+int recvCommandEPICS(uint8_t *data, uint32_t *count)
 {
     #ifdef DEBUG
     printf("recv\n");
@@ -178,9 +178,11 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
     //Read address
     uint8_t * address;
     address = (uint8_t*) malloc(2*sizeof(char));
+    
     status = pasynOctetSyncIO->read(user, (char*) address, 2, 5000, &bread, &eomReason);
+    printf("Address = %02X \n", address[0]);
 
-    if(address[0] != 0) return EXIT_FAILURE;
+    if(address[0] != 0x00) return EXIT_FAILURE;
     #endif
 
     uint8_t* header;
@@ -210,8 +212,10 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
     *count = size+2;
 
     memcpy(data, packet, *count);
+
     free(header);
-    free(payload);
+    if(size > 0) free(payload);
+
 
     #ifdef PUC
     uint8_t* checksum;
@@ -219,6 +223,8 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
     status = pasynOctetSyncIO->read(user, (char*)checksum, 1, 5000, &bread, &eomReason);
     //TODO: Verify checksum
     #endif
+
+    
 
     return EXIT_SUCCESS;
 }
