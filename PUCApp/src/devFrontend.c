@@ -107,19 +107,64 @@ typedef struct FrontendPvt {
 int sendCommandepics(uint8_t *data, uint32_t *count)
 {
     #ifdef DEBUG
-	printf("sendCommandepics\n");
+    printf("send\n");  
+    printf("count = %u\n", count);  
     #endif
-	asynStatus status;
-	size_t wrote;
-	status = pasynOctetSyncIO->write(user,(char *)data,*count,5000,&wrote);
-	if (status == asynSuccess)
-		return EXIT_SUCCESS;
-	return EXIT_SUCCESS;
+    size_t wrote;
+
+    asynStatus status = pasynOctetSyncIO->write(user,(char *)data,count,5000,&wrote);
+
+    if(status == asynSuccess) return EXIT_SUCCESS;
+
+    return EXIT_FAILURE;
 }
+
+#ifdef BPM
+int sendBPM(uint8_t *data, uint32_t *count)
+{
+    #ifdef DEBUG
+    printf("sendCommandepicsBPM\n");
+    #endif
+
+    return sendCommandEPICS(data, *count);
+}
+
+#elif defined PUC
+int sendPUC(uint8_t *data, uint32_t *count)
+{
+    #ifdef DEBUG
+    printf("sendCommandepicsPUC\n");
+    #endif
+
+    uint8_t packet[17000];
+    uint32_t packet_size = *count+3;
+    uint8_t *csum = &packet[packet_size-1];
+
+    *csum = 0;
+
+    uint8_t address = 0x05; //TODO: Get address
+
+    packet[0] = address; 
+    packet[1] = 0;
+
+    *csum -= address;
+
+    unsigned int i;
+    for(i = 0; i < *count; i++)
+    {
+        packet[i+2] = data[i];
+        *csum -= data[i];
+    }
+
+    return sendCommandEPICS(packet, packet_size);
+}
+#endif
+
+
 int recvCommandepics(uint8_t *data, uint32_t *count)
 {
     #ifdef DEBUG
-	printf("recvCommandepics\n");
+    printf("recv\n");
     #endif
 
     asynStatus status;
@@ -127,12 +172,22 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
     size_t bread;
     uint8_t packet[17000];
     size_t size;
+    int err;
+
+    #ifdef PUC
+    //Read address
+    uint8_t * address;
+    address = (uint8_t*) malloc(2*sizeof(char));
+    status = pasynOctetSyncIO->read(user, (char*) address, 2, 5000, &bread, &eomReason);
+
+    if(address[0] != 0) return EXIT_FAILURE;
+    #endif
 
     uint8_t* header;
     header = (uint8_t*) malloc(2*sizeof(char));
 
     status = pasynOctetSyncIO->read(user, (char*) header, 2, 5000, &bread, &eomReason);
-    if(status != asynSuccess) printf("Error reading header\n"); //TODO: Return error;
+    if(err = (status != asynSuccess)) printf("Error %d reading header\n", err); //TODO: Return error;
 
     if(header[1] == 255)
 
@@ -141,19 +196,15 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
         size = header[1];
 
     uint8_t* payload;
-    //printf("Size = %u\n", size);
-    payload = (uint8_t*) malloc(size*sizeof(char));
 
     if(size > 0)
-    {
-        status = pasynOctetSyncIO->read(user, (char *)payload, size, 5000, &bread, &eomReason);
-        int err;
-        if(err = (status != asynSuccess)) printf("Error %d reading payload\n", err); //TODO: Return error;        
+    {    
+        payload = (uint8_t*) malloc(size*sizeof(char));    
+        status = pasynOctetSyncIO->read(user, (char*) payload, size, 5000, &bread, &eomReason);
+        if(err = (status != asynSuccess)) printf("Error %d reading payload\n", err);
     }
 
-
     memcpy(packet, header, 2);
-
     if(size > 0) memcpy(packet+2, payload, size);
 
     *count = size+2;
@@ -161,6 +212,13 @@ int recvCommandepics(uint8_t *data, uint32_t *count)
     memcpy(data, packet, *count);
     free(header);
     free(payload);
+
+    #ifdef PUC
+    uint8_t* checksum;
+    checksum = (uint8_t*) malloc(1*sizeof(char));
+    status = pasynOctetSyncIO->read(user, (char*)checksum, 1, 5000, &bread, &eomReason);
+    //TODO: Verify checksum
+    #endif
 
     return EXIT_SUCCESS;
 }
@@ -502,7 +560,15 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     //TODO:remove!
     user = ppvt->pasynUser;
 
-    ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
+    #ifdef BPM
+    printf("BPM\n");
+    ppvt->sllp = sllp_client_new(sendBPM, recvCommandEPICS);
+    #elif defined PUC
+    printf("PUC\n");
+    ppvt->sllp = sllp_client_new(sendPUC, recvCommandEPICS);
+    #endif
+
+    //ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
     
     if (!ppvt->sllp)
     {
