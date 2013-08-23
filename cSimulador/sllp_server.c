@@ -60,10 +60,12 @@ struct sllp_server
 
 sllp_server_t *sllp_server_new (void)
 {
-    struct sllp_server *server = malloc(sizeof(*server));
+    struct sllp_server *server = (struct sllp_server*) malloc(sizeof(*server));
 
     if(!server)
         return NULL;
+
+    memset(server, 0, sizeof(*server));
 
     server->groups.count = GROUP_STANDARD_COUNT;
 
@@ -72,7 +74,6 @@ sllp_server_t *sllp_server_new (void)
     group_init(&server->groups.list[GROUP_WRITE_ID], GROUP_ALL_ID);
 
     server->groups.count = GROUP_STANDARD_COUNT;
-    memset(server->modified_list, 0, sizeof(server->modified_list));
 
     return server;
 }

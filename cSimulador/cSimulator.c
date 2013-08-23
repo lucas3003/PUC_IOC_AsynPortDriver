@@ -69,7 +69,6 @@ int main (){
 	struct sockaddr_in serveraddr; /* server's addr */
 	struct sockaddr_in clientaddr; /* client addr */
 	struct hostent *hostp; /* client host info */
-	char buf[BUFSIZE]; /* message buffer */
 	char *hostaddrp; /* dotted decimal host addr string */
 	int optval; /* flag value for setsockopt */
 	int n; /* message byte size */
@@ -143,40 +142,62 @@ int main (){
 		error("ERROR on inet_ntoa\n");
 	printf("server established connection with %s (%s)\n", 
 	hostp->h_name, hostaddrp);
-	uint8_t bufresponse[BUFSIZE];
+	uint8_t *bufresponse;
+	uint8_t *buf; /* message buffer */
+	//uint8_t *bufresponse;
+	uint8_t *auxbuf;
 	struct sllp_raw_packet request;
 	struct sllp_raw_packet response;
 	int i =0;
 	while (1) {
+    		if(i == 1000)
+			break;
     
 		/* 
 		* read: read input string from the client
 		*/
-		bzero(buf, BUFSIZE);
-		bzero(bufresponse, BUFSIZE);
-		n = read(childfd, buf, BUFSIZE);
+		//bzero(buf, BUFSIZE);
+		//bzero(bufresponse, BUFSIZE);
+
+		buf = (uint8_t*)malloc(sizeof(uint8_t)*BUFSIZE);
+		
+		n = read(childfd, (char*)buf, BUFSIZE);
+		printf("n=%d\n",n);
+		auxbuf = (uint8_t*)malloc(n*sizeof(uint8_t));
 		if (n < 0) 
 			error("ERROR reading from socket");
-		printf("server received %d bytes: b[0]=%d b[1]=%d\n",n,buf[0],buf[1]);
 	
-		request.data = buf;
+		memcpy(auxbuf,buf,n);
+
+		//printf("server received %d bytes: b[0]=%d b[1]=%d\n\r",n,auxbuf[0],auxbuf[1]);
+
+		free(buf);
+
+		request.data = auxbuf;
 		request.len = n;
 
+		bufresponse = (uint8_t*)malloc(sizeof(uint8_t)*BUFSIZE);
 		response.data = bufresponse;
 		
 		sllp_process_packet (sllp,&request,&response);
 		/* 
 		* write: echo the input string back to the client 
 		*/
-		n = write(childfd, response.data, response.len);
+		//printf("response: %d\n\r",response.len);
+		n = write(childfd, (char*)response.data, response.len);
 		if (n < 0) 
 			error("ERROR writing to socket");
 	
-		printf("server sent %d bytes: ", n);
-		for(i=0;i<response.len;i++)
-			printf("%d ",response.data[i]);		
-		printf("\n");
+		//printf("server sent %d bytes: ", n);
+		//for(i=0;i<response.len;i++)
+		//	printf("%d ",response.data[i]);		
+		//printf("\n");
+		free(auxbuf);
+		free(bufresponse);
+		i++;
 	}
+		
+		sllp_server_destroy(sllp);
 		close(childfd);
 	return 0;
 }

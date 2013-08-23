@@ -3,7 +3,8 @@
 ## You may have to change PUC to something else
 ## everywhere it appears in this file
 
-epicsEnvSet("uCIP","$(uCIP=localhost:6791)")
+#epicsEnvSet("uCIP","$(uCIP=localhost:6791)")
+epicsEnvSet("uCIP","$(uCIP=10.0.17.31:6791)")
 < envPaths
 
 cd ${TOP}
