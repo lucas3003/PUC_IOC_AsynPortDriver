@@ -1,20 +1,20 @@
-record(ai, "BPM:FRONTEND$(PORT):setpoint:read")
+record(ai, "BPM:FRONTEND$(PORT):setpoint1:read")
 {
 	field(DTYP, "asynFloat64")
-	field(DESC, "Temperature setpoint")
+	field(DESC, "Temperature setpoint1")
 	field(SCAN,"$(SCAN=1 second)")
-	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint ")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint1")
 	field(PREC, "3")
 	field(EGU, "Celsius")
 	field(EGUF, "100.0")
 	field(EGUL, "0.0")
 	field(LINR, "LINEAR")
 }
-record(ao, "BPM:FRONTEND$(PORT):setpoint:write")
+record(ao, "BPM:FRONTEND$(PORT):setpoint1:write")
 {
 	field(DTYP, "asynFloat64")
-	field(DESC, "Temperature setpoint")
-	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint")
+	field(DESC, "Temperature setpoint1")
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint1")
 	field(PREC, "3")
 	field(SCAN,"Passive")
 	field(EGU, "Celsius")
@@ -22,6 +22,77 @@ record(ao, "BPM:FRONTEND$(PORT):setpoint:write")
 	field(PINI, "YES")
 }
 
+record(ai, "BPM:FRONTEND$(PORT):setpoint2:read")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature setpoint2")
+	field(SCAN,"$(SCAN=1 second)")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint2")
+	field(PREC, "3")
+	field(EGU, "Celsius")
+	field(EGUF, "100.0")
+	field(EGUL, "0.0")
+	field(LINR, "LINEAR")
+}
+record(ao, "BPM:FRONTEND$(PORT):setpoint2:write")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature setpoint2")
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint2")
+	field(PREC, "3")
+	field(SCAN,"Passive")
+	field(EGU, "Celsius")
+	field(LINR, "NO CONVERSION")
+	field(PINI, "YES")
+}
+
+record(ai, "BPM:FRONTEND$(PORT):setpoint3:read")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature setpoint3")
+	field(SCAN,"$(SCAN=1 second)")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint3")
+	field(PREC, "3")
+	field(EGU, "Celsius")
+	field(EGUF, "100.0")
+	field(EGUL, "0.0")
+	field(LINR, "LINEAR")
+}
+record(ao, "BPM:FRONTEND$(PORT):setpoint3:write")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature setpoint3")
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint3")
+	field(PREC, "3")
+	field(SCAN,"Passive")
+	field(EGU, "Celsius")
+	field(LINR, "NO CONVERSION")
+	field(PINI, "YES")
+}
+
+record(ai, "BPM:FRONTEND$(PORT):setpoint4:read")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature setpoint4")
+	field(SCAN,"$(SCAN=1 second)")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint4")
+	field(PREC, "3")
+	field(EGU, "Celsius")
+	field(EGUF, "100.0")
+	field(EGUL, "0.0")
+	field(LINR, "LINEAR")
+}
+record(ao, "BPM:FRONTEND$(PORT):setpoint4:write")
+{
+	field(DTYP, "asynFloat64")
+	field(DESC, "Temperature setpoint4")
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint4")
+	field(PREC, "3")
+	field(SCAN,"Passive")
+	field(EGU, "Celsius")
+	field(LINR, "NO CONVERSION")
+	field(PINI, "YES")
+}
 record(ai, "BPM:FRONTEND$(PORT):temperature1")
 {
 	field(DTYP, "asynFloat64")
