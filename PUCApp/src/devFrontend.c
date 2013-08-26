@@ -46,37 +46,7 @@
 #include <epicsExport.h>
 #include "unionConversion.h"
 #include "sendrecvlib.h"
-
-/** Number of asyn parameters (asyn commands) this driver supports. */
-#define FRONTEND_N_PARAMS 6
-
-/** Specific asyn commands for this support module. These will be used and
- * managed by the parameter library (part of areaDetector). */
-typedef enum FrontendParam_t {
-	t_setpoint         /** Temperature setpoint*/,
-	t_sensor1   /** Temeperature sensor 1*/,	
-	t_sensor2 /** Temperature sensor 2*/,	
-	t_sensor3 /** Temperature sensor 3*/,	
-	t_sensor4    /** Temeperature sensor 4*/,	
-	c1_switchstate      /** Switch state*/,			
-    FrontendLastParam
-} FrontendParam_t;
-
-typedef struct{
-	FrontendParam_t paramEnum;
-	char *paramString;
-}FrontendParamStruct;
-
-static FrontendParamStruct FrontendParam[FRONTEND_N_PARAMS] = {
-	{t_setpoint,      "T_SetPoint"},
-	{t_sensor1,         "T_Sensor1"},
-	{t_sensor2,  "T_Sensor2"},
-	{t_sensor3,   "T_Sensor3"},
-	{t_sensor4, "T_Sensor4"},
-	{c1_switchstate, "S_State"},
-};
-
-asynUser *user;
+#include "frontendRecordParams.h"
 
 /*
  * Interposed layer private storage
@@ -129,9 +99,8 @@ report(void *pvt, FILE *fp, int details)
 static asynStatus
 drvUserCreate(void *drvPvt, asynUser *pasynUser,const char *drvInfo, const char **pptypeName, size_t *psize)
 {
-	int i;
 	//int offset;
-	char *pstring;
+	char *pstring = NULL;
 	/* We are passed a string that identifies this command.
 	* Set dataType and/or pasynUser->reason based on this string */
 
@@ -150,18 +119,7 @@ drvUserCreate(void *drvPvt, asynUser *pasynUser,const char *drvInfo, const char 
 		}
 	}*/
 
-	for (i=0; i<FRONTEND_N_PARAMS; i++) {
-		pstring = FrontendParam[i].paramString;
-		if (epicsStrCaseCmp(drvInfo, pstring) == 0) {
-			pasynUser->reason = FrontendParam[i].paramEnum;
-			if (pptypeName) *pptypeName = epicsStrDup(pstring);
-			if (psize) *psize = sizeof(FrontendParam[i].paramEnum);
-			asynPrint(pasynUser, ASYN_TRACE_FLOW,"drvUserCreate, command=%s\n", pstring);
-            		return asynSuccess;
-		}
-	}
-	asynPrint(pasynUser, ASYN_TRACE_ERROR,"drvUserCreate, unknown command=%s\n",drvInfo);
-	return asynError;
+	return frontendparamProcess(pasynUser,pstring,drvInfo,pptypeName,psize);
 }
 static asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser, const char **pptypeName, size_t *psize)
 {
@@ -357,7 +315,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority)
     free(lowerName);
 
     //TODO:remove!
-    setEpicsuser(&ppvt->pasynUser);
+    setEpicsuser(ppvt->pasynUser);
 
     #ifdef BPM
     printf("BPM\n");
