@@ -37,7 +37,7 @@ record(ai, "BPM:FRONTEND$(PORT):setpoint2:read")
 record(ao, "BPM:FRONTEND$(PORT):setpoint2:write")
 {
 	field(DTYP, "asynFloat64")
-	field(DESC, "Temperature setpoint2")
+	field(DESC, "Temperature setpoint")
 	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))T_SetPoint2")
 	field(PREC, "3")
 	field(SCAN,"Passive")

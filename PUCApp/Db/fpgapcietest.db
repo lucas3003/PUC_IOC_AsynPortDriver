@@ -1,0 +1,7 @@
+record(stringout, "BPM:FPGA:dataAcquisition:directory")
+{
+	field(DTYP, "asynOctetWrite")
+	field(DESC, "Data acquisition directory")
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))DAdirectory")
+	field(PINI, "YES")
+}

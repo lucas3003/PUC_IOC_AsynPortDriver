@@ -14,10 +14,11 @@ dbLoadDatabase "dbd/PUC.dbd"
 PUC_registerRecordDeviceDriver pdbbase
 
 # Load record instances
-devFrontendConfigure("1", "$(uCIP)", 0x1);
-dbLoadRecords("db/frontend.db","user=rootHost, PORT=1, TIMEOUT=5")
+##devFrontendConfigure("1", "$(uCIP)", 0x1);
+##dbLoadRecords("db/frontend.db","user=rootHost, PORT=1, TIMEOUT=5")
 #drvAsynSerialPortConfigure("test", "/dev/ttyACM0",0,0,0)
-
+devFpgaPcieConfigure("1", "fpga", 0x1,0x01);
+dbLoadRecords("db/fpgapcietest.db","user=rootHost, PORT=1, TIMEOUT=5")
 cd ${TOP}/iocBoot/${IOC}
 iocInit
 

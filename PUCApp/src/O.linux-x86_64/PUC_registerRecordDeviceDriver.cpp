@@ -400,6 +400,7 @@ epicsShareExtern void (*pvar_func_drvAsynIPServerPortRegisterCommands)(void);
 epicsShareExtern void (*pvar_func_asynRegister)(void);
 epicsShareExtern void (*pvar_func_asynInterposeFlushRegister)(void);
 epicsShareExtern void (*pvar_func_asynInterposeEosRegister)(void);
+epicsShareExtern void (*pvar_func_devFpgaPcieConfigure_RegisterCommands)(void);
 
 epicsShareExtern int *pvar_int_asCaDebug;
 epicsShareExtern int *pvar_int_dbRecordsOnceOnly;
@@ -437,6 +438,7 @@ int PUC_registerRecordDeviceDriver(DBBASE *pbase)
     (*pvar_func_asynRegister)();
     (*pvar_func_asynInterposeFlushRegister)();
     (*pvar_func_asynInterposeEosRegister)();
+    (*pvar_func_devFpgaPcieConfigure_RegisterCommands)();
     iocshRegisterVariable(vardefs);
     return 0;
 }
