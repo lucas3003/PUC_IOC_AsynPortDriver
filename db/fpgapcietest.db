@@ -5,3 +5,11 @@ record(stringout, "BPM:FPGA:dataAcquisition:directory")
 	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))DAdirectory")
 	field(PINI, "YES")
 }
+record(waveform, "BPM:FPGA:dataAcquisition:waveform")
+{
+    field(DTYP, "asynFloat64ArrayIn")
+    field(INP,  "@asyn($(PORT),0,5)Waveform")
+    field(FTVL, "DOUBLE")
+    field(NELM, "50")
+    field(SCAN, "1 second")
+}

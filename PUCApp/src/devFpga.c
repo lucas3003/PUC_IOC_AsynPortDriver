@@ -44,7 +44,7 @@
 #include <epicsTime.h>
 #include <errlog.h>
 #include <iocsh.h>
-//#include "asynOctetSyncIO.h"
+#include "asynOctetSyncIO.h"
 #include "asynFloat32Array.h"
 #include "asynInt32.h"
 #include "asynFloat64.h"
@@ -89,7 +89,7 @@ typedef struct FrontendPvt {
 	asynInterface  asynFloat64;
 	asynInterface  asynDrvUser;
 	asynInterface  asynOctet;
-	asynInterface  asynFloat32Array;
+	asynInterface  asynFloat64Array;
 	asynInterface  asynOctetSyncIO;
 
 	unsigned long commandCount;
@@ -108,6 +108,8 @@ typedef struct FrontendPvt {
 	void **bar;
 	dma_status status;
 	
+	int seed;
+
 	DataAcquisitionDirectory *directory;
 
 } FpgaPciePvt;
@@ -190,20 +192,20 @@ disconnect(void *pvt, asynUser *pasynUser)
 }
 static asynCommon commonMethods = { report, connect, disconnect };
 /*
-static asynStatus OSIOconnect(const char *port, int addr,
+static asynStatus IOconnect(const char *port, int addr,
                          asynUser **ppasynUser, const char *drvInfo){
 	return asynSuccess;
 }
-static asynStatus OSIOdisconnect(asynUser *pasynUser){
+static asynStatus IOdisconnect(asynUser *pasynUser){
 	return asynSuccess;
 }
-static asynStatus OSIOopenSocket(const char *server, int port, char **portName){
+static asynStatus IOopenSocket(const char *server, int port, char **portName){
+	return asynSuccess;
+}*/
+/*asynStatus IOwrite(asynUser *pasynUser,char const *buffer, size_t buffer_len,double timeout,size_t *nbytesTransfered){
 	return asynSuccess;
 }
-asynStatus writeIt(asynUser *pasynUser,char const *buffer, size_t buffer_len,double timeout,size_t *nbytesTransfered){
-	return asynSuccess;
-}
-static asynOctetSyncIO OctetSyncIOMethods = {OSIOconnect,OSIOdisconnect,OSIOopenSocket,writeIt};*/
+static asynOctetSyncIO OctetSyncIOMethods = {IOconnect,IOdisconnect,IOopenSocket,IOwrite};*/
 /*
 *asynOctet methods
 */
@@ -246,7 +248,7 @@ static asynStatus
 			}
 		}
 	}
-	//pasynOctetSyncIO->writeIt(pasynUser,NULL,0,0,NULL);
+	pasynOctetSyncIO->write(pasynUser,NULL,0,0,NULL);//TODO:pog!why?!
 
 	FILE *file_dir;
 	file_dir = fopen (ppvt->directory->dir_str,"w");
@@ -276,19 +278,32 @@ readArray(asynUser *pasynUser, epicsFloat32 *pvalue,size_t nelem,size_t *nIn,dou
 static asynFloat32ArraySyncIO asynFloat32ArraySyncIOMethods = { readArray };
 
 *Float 32 array
-*//*
+*/
+static asynStatus float64ArrayWrite(void *drvPvt, asynUser *pasynUser,
+epicsFloat64 *value, size_t nelements){
+	return asynSuccess;
+}
 static asynStatus
-float32ArrayRead(void *pvt,asynUser *pasynUser, epicsFloat32 *value, size_t nelements,size_t *nIn){
+float64ArrayRead(void *pvt,asynUser *pasynUser, epicsFloat64 *value, size_t nelements,size_t *nIn){
+        printf("nelements %d\n",(int)nelements);
 	FpgaPciePvt *ppvt = (FpgaPciePvt*)pvt;
+	int seed = ppvt->seed;
         printf("nelements %d\n",(int)nelements);
 	asynStatus status = asynError;
-        printf("5\n");
-	pasynFloat32ArraySyncIO->read(pasynUser,value,nelements,nIn,0);
+	int i=0;
+	value[i] = sin(seed);
+	for(i=0;i<nelements;i++)
+		value[i] = value[i]  + (epicsFloat64)sin(i+seed);
+	if ((i+seed < 6280))
+		ppvt->seed = i + seed;
+	else
+		ppvt->seed = 0;
+	*nIn = nelements;
 	return asynSuccess;
 }
 
-static asynFloat32Array asynFloat32ArrayMethods  = { float32ArrayRead };	 
-*/
+static asynFloat64Array asynFloat64ArrayMethods  = { NULL,float64ArrayRead,NULL,NULL };	 
+
 /*
  * asynInt32 methods
  */
@@ -447,6 +462,7 @@ devFpgaPcieConfigure(const char *portName, const char *hostInfo, int priority, i
      */
     ppvt = callocMustSucceed(1, sizeof(FpgaPciePvt), "devFpgaPcieConfigure");
     if (priority == 0) priority = epicsThreadPriorityMedium;
+    ppvt->seed = 0;
 
     /*
      * Create the port that we'll use for I/O.
@@ -456,7 +472,6 @@ devFpgaPcieConfigure(const char *portName, const char *hostInfo, int priority, i
      */
 
     ppvt->portName = epicsStrDup(portName);
-
     /*
      * Create our port
      */
@@ -473,14 +488,14 @@ devFpgaPcieConfigure(const char *portName, const char *hostInfo, int priority, i
     /*
      * Advertise our interfaces
      */
-    /*ppvt->asynFloat32Array.interfaceType = asynFloat32ArrayType;
-    ppvt->asynFloat32Array.pinterface = &asynFloat32ArrayMethods;
-    ppvt->asynFloat32Array.drvPvt = ppvt;
-    status = pasynManager->registerInterface(portName, &ppvt->asynFloat32Array);
+    ppvt->asynFloat64Array.interfaceType = asynFloat64ArrayType;
+    ppvt->asynFloat64Array.pinterface = &asynFloat64ArrayMethods;
+    ppvt->asynFloat64Array.drvPvt = ppvt;
+    status = pasynManager->registerInterface(portName, &ppvt->asynFloat64Array);
     if (status != asynSuccess) {
         printf("Can't register asynCommon support.\n");
         return -1;
-    }*/
+    }
     ppvt->asynOctet.interfaceType = asynOctetType;
     ppvt->asynOctet.pinterface = &octetMethods;
     ppvt->asynOctet.drvPvt = ppvt;
