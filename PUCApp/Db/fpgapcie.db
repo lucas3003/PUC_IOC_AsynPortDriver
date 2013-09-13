@@ -76,11 +76,9 @@ record(stringout, "BPM:FPGA:dataAcquisition:directory")
 
 record(waveform, "BPM:FPGA:dataAcquisition:waveform")
 {
-    field(PINI, "NO")
-    field(DTYP, "asynFloat32ArrayIn")
-    field(INP,  "@asyn($(PORT),0,5)Waveform")
-    field(FTVL, "FLOAT")
-    field(NELM, "6280")
-    field(SCAN, "1 second")
-    field(PINI, "NO")
+    field(DTYP, "asynFloat64ArrayOut")
+    field(INP,  "@asyn($(PORT),0,$(TIMEOUT))Waveform")
+    field(FTVL, "DOUBLE")
+    field(NELM, "50")
+    field(SCAN,"$(SCAN=1 second)")
 }

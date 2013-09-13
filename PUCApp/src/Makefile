@@ -17,7 +17,8 @@ PUC_INCLUDES += -I/usr/include/pciDriver/driver
 # PUC.dbd will be made up from these files:
 PUC_DBD += base.dbd
 PUC_DBD += Frontend.dbd
-PUC_DBD += Fpga.dbd
+#PUC_DBD += Fpga.dbd
+PUV_DBD += drvPcieDMA.dbd
 #PUC_DBD += portInclude.dbd
 
 # Include dbd files from all support applications:
@@ -38,7 +39,8 @@ PUC_SRCS += FpgaPcieRecordParams.c
 PUC_SRCS += readwriteDMA.c
 PUC_SRCS += sllp_client.c
 PUC_SRCS += sendrecvlib.c
-PUC_SRCS += devFpga.c
+#PUC_SRCS += devFpga.c
+PUC_SRCS += drvPCIeDMA.c
 
 # Build the main IOC entry point on workstation OSs.
 PUC_SRCS_DEFAULT += PUCMain.cpp

@@ -70,7 +70,7 @@ static void readDMA(uint32_t *bar0, unsigned long ha, unsigned long pa, unsigned
 
 void DMAKernelMemoryRead(uint32_t *bar0, uint32_t *bar1, uint64_t *bar2, pd_kmem_t *km, const unsigned long test_len, void *kernel_memory){
 	uint32_t *ptr = (uint32_t*)kernel_memory;
-	unsigned int bar_no;
+	unsigned int bar_no = 0x0;
 
 	if (bar1 != 0) 
 		bar_no = 0x1;

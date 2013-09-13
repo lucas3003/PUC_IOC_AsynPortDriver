@@ -48,7 +48,7 @@
 #include "asynFloat32Array.h"
 #include "asynInt32.h"
 #include "asynFloat64.h"
-#include "asynFloat32ArraySyncIO.h"
+//#include "asynFloat32ArraySyncIO.h"
 #include "asynCommonSyncIO.h"
 #include "asynStandardInterfaces.h"
 //#include "drvAsynIPPort.h"
@@ -89,7 +89,7 @@ typedef struct FrontendPvt {
 	asynInterface  asynFloat64;
 	asynInterface  asynDrvUser;
 	asynInterface  asynOctet;
-	asynInterface  asynFloat64Array;
+	asynInterface  Float32Array;
 	asynInterface  asynOctetSyncIO;
 
 	unsigned long commandCount;
@@ -213,7 +213,6 @@ static asynStatus
  octetWrite(void *pvt, asynUser *pasynUser, const char *data,
 	size_t numchars, size_t *nBytesTransfered)
 {
-        printf("8\n");
 	FpgaPciePvt *ppvt = (FpgaPciePvt*)pvt;
 	asynStatus status = asynError;
 	FpgaPcieParam_t command;
@@ -224,7 +223,6 @@ static asynStatus
                                       "Value is not a null-terminated string");
 		return asynError;
 	}*/
-        printf("8\n");
 	uint32_t count;
 	if(command == DAdirectory){
 		if(ppvt->directory->pini == true){
@@ -279,30 +277,34 @@ static asynFloat32ArraySyncIO asynFloat32ArraySyncIOMethods = { readArray };
 
 *Float 32 array
 */
-static asynStatus float64ArrayWrite(void *drvPvt, asynUser *pasynUser,
-epicsFloat64 *value, size_t nelements){
+static asynStatus float32ArrayWrite(void *drvPvt, asynUser *pasynUser,
+epicsFloat32 *value, size_t nelements){
 	return asynSuccess;
 }
 static asynStatus
-float64ArrayRead(void *pvt,asynUser *pasynUser, epicsFloat64 *value, size_t nelements,size_t *nIn){
+float32ArrayRead(void *pvt,asynUser *pasynUser, epicsFloat32 *value, size_t nelements,size_t *nIn){
         printf("nelements %d\n",(int)nelements);
+	int command = pasynUser->reason;
 	FpgaPciePvt *ppvt = (FpgaPciePvt*)pvt;
-	int seed = ppvt->seed;
-        printf("nelements %d\n",(int)nelements);
-	asynStatus status = asynError;
-	int i=0;
-	value[i] = sin(seed);
-	for(i=0;i<nelements;i++)
-		value[i] = value[i]  + (epicsFloat64)sin(i+seed);
-	if ((i+seed < 6280))
-		ppvt->seed = i + seed;
-	else
-		ppvt->seed = 0;
-	*nIn = nelements;
+	if(command == Waveform){
+		pasynOctetSyncIO->read(pasynUser,NULL,0,0,NULL,NULL);//TODO:pog!why?!
+		int seed = ppvt->seed;
+	        printf("nelements %d\n",(int)nelements);
+		asynStatus status = asynError;
+		int i=0;
+		value[i] = sin(seed);
+		for(i=0;i<nelements;i++)
+			value[i] = value[i]  + (epicsFloat32)sin(i+seed);
+		if ((i+seed < 6280))
+			ppvt->seed = i + seed;
+		else
+			ppvt->seed = 0;
+		*nIn = nelements;
+	}
 	return asynSuccess;
 }
 
-static asynFloat64Array asynFloat64ArrayMethods  = { NULL,float64ArrayRead,NULL,NULL };	 
+static asynFloat32Array asynFloat32ArrayMethods  = { NULL,float32ArrayRead,NULL,NULL };	 
 
 /*
  * asynInt32 methods
@@ -339,6 +341,7 @@ int32Write(void *pvt, asynUser *pasynUser, epicsInt32 value)
 			}
 			break;
 		default:
+			printf("test record loading\n");
 			break;
 	}
 	return status;
@@ -380,11 +383,12 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 				uint32_t *registerValue0 = (uint32_t*)ppvt->bar[0];
 				uint32_t *registerValue1 = (uint32_t*)ppvt->bar[1];
 				ppvt->status = READING_KM;
-				DMAKernelMemoryRead(registerValue0, registerValue1, (uint64_t)0, ppvt->kernel_memory, BRAM_SIZE,ppvt->kmem_handle);
+				DMAKernelMemoryRead(registerValue0, registerValue1, (uint64_t)0, ppvt->kernel_memory, BRAM_SIZE,ppvt->kmem_handle,1);
 			}
 			value[0] = 0;
 			break;
 		default:
+			printf("test\n");
 			break;					
 	}
 
@@ -488,10 +492,10 @@ devFpgaPcieConfigure(const char *portName, const char *hostInfo, int priority, i
     /*
      * Advertise our interfaces
      */
-    ppvt->asynFloat64Array.interfaceType = asynFloat64ArrayType;
-    ppvt->asynFloat64Array.pinterface = &asynFloat64ArrayMethods;
-    ppvt->asynFloat64Array.drvPvt = ppvt;
-    status = pasynManager->registerInterface(portName, &ppvt->asynFloat64Array);
+    ppvt->Float32Array.interfaceType = asynFloat32ArrayType;
+    ppvt->Float32Array.pinterface = (void *)&asynFloat32ArrayMethods;
+    ppvt->Float32Array.drvPvt = ppvt;
+    status = pasynManager->registerInterface(portName, &ppvt->Float32Array);
     if (status != asynSuccess) {
         printf("Can't register asynCommon support.\n");
         return -1;
@@ -528,7 +532,6 @@ devFpgaPcieConfigure(const char *portName, const char *hostInfo, int priority, i
         printf("Can't register asynFloat64 support.\n");
         return -1;
     }
-    #ifndef octettest 
     ppvt->asynInt32.interfaceType = asynInt32Type;
     ppvt->asynInt32.pinterface = &int32Methods;
     ppvt->asynInt32.drvPvt = ppvt;
@@ -546,7 +549,6 @@ devFpgaPcieConfigure(const char *portName, const char *hostInfo, int priority, i
         return -1;
     }
     
-    #endif
     #ifdef DEBUG
     printf("Configuration succeeded\n");
     #endif
@@ -565,6 +567,8 @@ devFpgaPcieConfigure(const char *portName, const char *hostInfo, int priority, i
    ppvt->directory->pini = true;
    printf("%s\n",home_dir);
    /*allocating pci_handle*/
+
+
    #ifndef octettest
    char temp[50];
    ppvt->pci_handle = callocMustSucceed(1, sizeof(pd_device_t), "pci_handle");
