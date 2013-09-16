@@ -241,21 +241,24 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     if (writePollmsec == 0) writePollmsec = 1;
     if (writePollmsec < 0) writePollmsec = -1;
 
-    char *bar;
-    char *address_str;
-    char *search = "U";
-    char *message;
+    char *bar = (char *)malloc(sizeof(char)*4);
+    char *address_str = (char *)malloc(sizeof(char)*4);
+    char *message = (char *)malloc(sizeof(char)*(numchars));
     int address;
     int i = 0;
     int j = 0;
     int nchars = 0;
-    char *aux = (char *)malloc(sizeof(char)*numchars);
-    strncpy(aux,data,numchars);
-    bar = strtok(aux,search);
 
-    address_str = strtok(NULL,search);
+    for(i=0;i<4;i++)
+        bar[i] = data[i];
+    for(i=0;i<4;i++)
+        address_str[i] = data[i+4];
+    for(i=0;i<numchars;i++)
+        message[i] = data[8+i];  
+
     address = atoi(address_str);
-    message = strtok(NULL,search);    
+
+    printf("writting %s @ %s. message %s\n",bar,address_str,message);
 
     if (strcmp(bar,"BAR2")==0){
          uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
@@ -275,7 +278,9 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     }
     else if (strcmp(bar,"BAR0")){
     }
-    free(aux);
+    free(bar);
+    free(address_str);
+    free(message);
     *nbytesTransfered = nchars;
     return status;
 }
@@ -283,6 +288,7 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
 /*
  * Read from the pcie interface
  * the data string must be filled with register+address
+ * data MUST be dinamically allocated!
  */
 static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
@@ -315,19 +321,22 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     
     int i = 0;
     int j = 0;
-    char *bar;
-    char *address_str;
-    char *search = "U";
-    char *aux = (char*)malloc(sizeof(char)*9);
+    char *bar = (char*)malloc(sizeof(char)*4);
+    char *address_str = (char*)malloc(sizeof(char)*4);
     char *answer = (char*)malloc(sizeof(char)*maxchars);
-    strncpy(aux,data,9);
+
     int address;
     int nchars = 0;
-    bar = strtok(aux,search);
 
-    address_str = strtok(NULL,search);
+    for(i=0;i<4;i++)
+        bar[i] = data[i];
+    for(i=0;i<4;i++)
+        address_str[i] = data[i+4];
+
     address = atoi(address_str);
-    printf("reading %s @ %s \n",bar,address_str);
+    
+    printf("reading %s @ %s %d  \n",bar,address_str,address);
+    
     if (strcmp(bar,"BAR2") == 0){
          
          uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
@@ -346,11 +355,18 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
                    i++;
          }
     }
+    if (strcmp(bar, "DMAr") == 0){
+
+         uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
+         unsigned_int_32_value auxi32;
+
+    }
     else if (strcmp(bar,"BAR0")){
     }
-    free(aux);
     free(data);
     data = answer;
+    free(bar);
+    free(address_str);
     
     //TODO:check correctness
 
@@ -541,20 +557,18 @@ drvPcieDMAConfigure(const char *portName,
     }
     int n=1;
     int goteom=1;
-    //char *data = (char*)malloc(sizeof(char)*64);
-    char *data = "BAR2U0000UHELLO WORLD" ;
-    char *answer = (char*)malloc(sizeof(char)*9);
+    char *data = "BAR20000HELLO WORLD" ;
+    char *answer = (char*)malloc(sizeof(char)*8);
     answer[0]='B';
     answer[1]='A';
     answer[2]='R';
     answer[3]='2';
-    answer[4]='U';
+    answer[4]='0';
     answer[5]='0';
     answer[6]='0';
     answer[7]='0';
-    answer[8]='0';
     printf("write test\n");
-    pasynOctet->write(pvt,pvt->pasynUser,data,21,&n);
+    pasynOctet->write(pvt,pvt->pasynUser,data,11,&n);
     printf("read test\n");
     pasynOctet->read(pvt,pvt->pasynUser,answer,10,&n,&goteom);
 
