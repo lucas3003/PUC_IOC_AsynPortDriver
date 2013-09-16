@@ -18,7 +18,7 @@ PUC_INCLUDES += -I/usr/include/pciDriver/driver
 PUC_DBD += base.dbd
 PUC_DBD += Frontend.dbd
 #PUC_DBD += Fpga.dbd
-PUV_DBD += drvPcieDMA.dbd
+PUC_DBD += drvPcieDMA.dbd
 #PUC_DBD += portInclude.dbd
 
 # Include dbd files from all support applications:

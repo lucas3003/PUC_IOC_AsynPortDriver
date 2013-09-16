@@ -18,23 +18,19 @@
 # or include statements that pull in similar RELEASE files.
 # Build settings that are NOT module paths should appear in a
 # CONFIG_SITE file.
-ifeq ("$HOME","/home/lucas")
-	TEMPLATE_TOP=/home/lucas/EPICS/base/templates/makeBaseApp/top
+
+TEMPLATE_TOP=/root/epics/base-3.14.12.3/templates/makeBaseApp/top
 
 # If using the sequencer, point SNCSEQ at its top directory:
 #SNCSEQ=$(EPICS_BASE)/../modules/soft/seq
 
 # EPICS_BASE usually appears last so other apps can override stuff:
 #EPICS_BASE=/home/lucas/EPICS/base
-	EPICS_BASE=/home/lucas/EPICS/base314
+
+EPICS_BASE=/root/epics/base-3.14.12.3
 
 # Set RULES here if you want to take build rules from somewhere
 # other than EPICS_BASE:
 #RULES=/path/to/epics/support/module/rules/x-y
 
-	ASYN=/home/lucas/EPICS/asyn
-else ifeq ("$HOME","/home/igor")
-	TEMPLATE_TOP=/home/igor/epics/base/templates/makeBaseApp/top
-	EPICS_BASE=/home/igor/epics/base
-	ASYN=/home/igor/asyn/asyn4-21
-endif
+ASYN=/root/epics/asyn4-21

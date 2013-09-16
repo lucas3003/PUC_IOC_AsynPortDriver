@@ -149,6 +149,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          pvt->kmem_handle == NULL || pvt->umem_handle == NULL )
 	     /*initialize pci handle*/ 
 	     pcie_dma_pvt_Cleanup(pvt);
+             pvt->pci_handle = callocMustSucceed(1,sizeof(pd_device_t),"pd_device_t"); 
 	     if (pd_open(atoi(pvt->DeviceName), pvt->pci_handle) != 0) {
 		  printf("failed to open device\ntry another device id\n");
 		  return -1;
@@ -162,7 +163,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
 	    void **bar = callocMustSucceed(6, sizeof(void*), "bar");
 	    int i = 0;
 	    printf("Allocating bars\n");
-	    for (i=0;i<6;i++){
+	    for (i=0;i<=4;i=i+2){
 		  bar[i] = pd_mapBAR(pvt->pci_handle, i);
 		  if (bar[i] == NULL){
 		        printf("failed mapping bar%d\n",i);
@@ -242,7 +243,8 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
 
     char *bar;
     char *address_str;
-    char *search = "\0";
+    char *search = "U";
+    char *message;
     int address;
     int i = 0;
     int j = 0;
@@ -253,13 +255,14 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
 
     address_str = strtok(NULL,search);
     address = atoi(address_str);
-    
-    if (strcmp(bar,"BAR2")){
+    message = strtok(NULL,search);    
+
+    if (strcmp(bar,"BAR2")==0){
          uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
          unsigned_int_32_value auxi32;
          while(1){
                    for(j=0;j < 4;j++){
-                        auxi32.vvalue[j] = aux[i*4+j];
+                        auxi32.vvalue[j] = message[i*4+j];
                         if (nchars == numchars)
                              break;
                         nchars++;
@@ -310,27 +313,30 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     if (gotEom) *gotEom = 0;
 /**-->**/
     
-    char *bar;
-    char *address_str;
-    char *search = "\0";
-    int address;
     int i = 0;
     int j = 0;
+    char *bar;
+    char *address_str;
+    char *search = "U";
+    char *aux = (char*)malloc(sizeof(char)*9);
+    char *answer = (char*)malloc(sizeof(char)*maxchars);
+    strncpy(aux,data,9);
+    int address;
     int nchars = 0;
-    bar = strtok(data,search);
+    bar = strtok(aux,search);
 
     address_str = strtok(NULL,search);
     address = atoi(address_str);
-    
-    if (strcmp(bar,"BAR2")){
+    printf("reading %s @ %s \n",bar,address_str);
+    if (strcmp(bar,"BAR2") == 0){
          
          uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
          unsigned_int_32_value auxi32;
          while(1){
-                   printf("sdram[i] = %d\n", sdram[i]);
                    auxi32.ui32value = sdram[i];
                    for(j=0;j < 4;j++){
-                        data[i*4+j] = auxi32.vvalue[j];
+                        printf("%c\n",auxi32.vvalue[j]);
+                        answer[i*4+j] = auxi32.vvalue[j];
                         if (nchars == maxchars)
                              break;
                         nchars++;
@@ -342,6 +348,9 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     }
     else if (strcmp(bar,"BAR0")){
     }
+    free(aux);
+    free(data);
+    data = answer;
     
     //TODO:check correctness
 
@@ -441,9 +450,9 @@ drvPcieDMAConfigure(const char *portName,
     }
 
      /*initialize pci handle*/
-     
+     pvt->pci_handle = callocMustSucceed(1,sizeof(pd_device_t),"pd_device_t"); 
      if (pd_open(atoi(pvt->DeviceName), pvt->pci_handle) != 0) {
-          printf("failed to open device\ntry another device id\n");
+          printf("failed to open device fpga%d\ntry another device id\n",atoi(pvt->DeviceName));
           return -1;
      }
      else
@@ -455,7 +464,7 @@ drvPcieDMAConfigure(const char *portName,
     void **bar = callocMustSucceed(6, sizeof(void*), "bar");
     int i = 0;
     printf("Allocating bars\n");
-    for (i=0;i<6;i++){
+    for (i=0;i<=4;i=i+2){
           bar[i] = pd_mapBAR(pvt->pci_handle, i);
           if (bar[i] == NULL){
                 printf("failed mapping bar%d\n",i);
@@ -530,6 +539,26 @@ drvPcieDMAConfigure(const char *portName,
         pcie_dma_pvt_Cleanup(pvt);
         return -1;
     }
+    int n=1;
+    int goteom=1;
+    //char *data = (char*)malloc(sizeof(char)*64);
+    char *data = "BAR2U0000UHELLO WORLD" ;
+    char *answer = (char*)malloc(sizeof(char)*9);
+    answer[0]='B';
+    answer[1]='A';
+    answer[2]='R';
+    answer[3]='2';
+    answer[4]='U';
+    answer[5]='0';
+    answer[6]='0';
+    answer[7]='0';
+    answer[8]='0';
+    printf("write test\n");
+    pasynOctet->write(pvt,pvt->pasynUser,data,21,&n);
+    printf("read test\n");
+    pasynOctet->read(pvt,pvt->pasynUser,answer,10,&n,&goteom);
+
+
     return 0;
 }
 

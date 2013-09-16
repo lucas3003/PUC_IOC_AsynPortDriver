@@ -400,6 +400,7 @@ epicsShareExtern void (*pvar_func_drvAsynIPServerPortRegisterCommands)(void);
 epicsShareExtern void (*pvar_func_asynRegister)(void);
 epicsShareExtern void (*pvar_func_asynInterposeFlushRegister)(void);
 epicsShareExtern void (*pvar_func_asynInterposeEosRegister)(void);
+epicsShareExtern void (*pvar_func_drvPcieDMARegisterCommands)(void);
 
 epicsShareExtern int *pvar_int_asCaDebug;
 epicsShareExtern int *pvar_int_dbRecordsOnceOnly;
@@ -413,7 +414,7 @@ static struct iocshVarDef vardefs[] = {
 
 int PUC_registerRecordDeviceDriver(DBBASE *pbase)
 {
-    const char *bldTop = "/home/igor/frontend_puc/merged/sllp_epics";
+    const char *bldTop = "/root/epics/sllp_epics";
     const char *envTop = getenv("TOP");
 
     if (envTop && strcmp(envTop, bldTop)) {
@@ -437,6 +438,7 @@ int PUC_registerRecordDeviceDriver(DBBASE *pbase)
     (*pvar_func_asynRegister)();
     (*pvar_func_asynInterposeFlushRegister)();
     (*pvar_func_asynInterposeEosRegister)();
+    (*pvar_func_drvPcieDMARegisterCommands)();
     iocshRegisterVariable(vardefs);
     return 0;
 }
