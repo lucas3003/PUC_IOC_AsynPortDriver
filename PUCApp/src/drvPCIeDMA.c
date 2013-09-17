@@ -255,10 +255,11 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         address_str[i] = data[i+4];
     for(i=0;i<numchars;i++)
         message[i] = data[8+i];  
-
+    i = 0;
     address = atoi(address_str);
 
-    printf("writting %s @ %s. message %s\n",bar,address_str,message);
+//    printf("writting %s @ %s. message %s\n",bar,address_str,message);
+    printf("writting %s @ %s. message %s %d\n",bar,address_str,message,address);
 
     if (strcmp(bar,"BAR2")==0){
          uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
@@ -266,14 +267,15 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
          while(1){
                    for(j=0;j < 4;j++){
                         auxi32.vvalue[j] = message[i*4+j];
+                        nchars++;
                         if (nchars == numchars)
                              break;
-                        nchars++;
                    }
-                   if (nchars == numchars)
-                        break;
                    sdram[i] = auxi32.ui32value;
                    i++;
+
+                   if (nchars == numchars)
+                        break;
          }
     }
     else if (strcmp(bar,"BAR0")){
@@ -332,11 +334,11 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         bar[i] = data[i];
     for(i=0;i<4;i++)
         address_str[i] = data[i+4];
-
+    i = 0;
     address = atoi(address_str);
-    
     printf("reading %s @ %s %d  \n",bar,address_str,address);
     
+    free(address_str);
     if (strcmp(bar,"BAR2") == 0){
          
          uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
@@ -346,27 +348,18 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
                    for(j=0;j < 4;j++){
                         printf("%c\n",auxi32.vvalue[j]);
                         answer[i*4+j] = auxi32.vvalue[j];
+                        nchars++;
                         if (nchars == maxchars)
                              break;
-                        nchars++;
                    }
                    if (nchars == maxchars)
                         break;
                    i++;
          }
     }
-    if (strcmp(bar, "DMAr") == 0){
-
-         uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
-         unsigned_int_32_value auxi32;
-
-    }
-    else if (strcmp(bar,"BAR0")){
-    }
     free(data);
     data = answer;
     free(bar);
-    free(address_str);
     
     //TODO:check correctness
 
@@ -570,7 +563,9 @@ drvPcieDMAConfigure(const char *portName,
     printf("write test\n");
     pasynOctet->write(pvt,pvt->pasynUser,data,11,&n);
     printf("read test\n");
-    pasynOctet->read(pvt,pvt->pasynUser,answer,10,&n,&goteom);
+    pasynOctet->read(pvt,pvt->pasynUser,answer,11,&n,&goteom);
+    printf("read answer\n");
+    printf("%s\n",answer);
 
 
     return 0;
