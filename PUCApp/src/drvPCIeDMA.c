@@ -59,6 +59,7 @@
 
 #include "/usr/include/pciDriver/driver/pciDriver.h"
 #include "/usr/include/pciDriver/lib/pciDriver.h"
+#include "drvPCIeDMA.h"
 
 #define BRAM_SIZE  0x4000
 
@@ -241,32 +242,27 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     if (writePollmsec == 0) writePollmsec = 1;
     if (writePollmsec < 0) writePollmsec = -1;
 
-    char *bar = (char *)malloc(sizeof(char)*4);
-    char *address_str = (char *)malloc(sizeof(char)*4);
     char *message = (char *)malloc(sizeof(char)*(numchars));
-    int address;
+    uint32_t *address;
     int i = 0;
     int j = 0;
     int nchars = 0;
-
-    for(i=0;i<4;i++)
-        bar[i] = data[i];
-    for(i=0;i<4;i++)
-        address_str[i] = data[i+4];
-    for(i=0;i<numchars;i++)
-        message[i] = data[8+i];  
+    memset (message,'\0',numchars);
+    for(i=0;i<numchars;i++){
+         if(data[i] == '\0')
+              break;
+         message[i] = data[i];
+    }
+  
     i = 0;
-    address = atoi(address_str);
+    address = (uint32_t*)pasynUser->drvUser;
 
-//    printf("writting %s @ %s. message %s\n",bar,address_str,message);
-    printf("writting %s @ %s. message %s %d\n",bar,address_str,message,address);
-
-    if (strcmp(bar,"BAR2")==0){
-         uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
+    if (pasynUser->reason == bar2){
+         uint32_t *sdram = (uint32_t*)pvt->bar[2] + *address;
          unsigned_int_32_value auxi32;
          while(1){
                    for(j=0;j < 4;j++){
-                        auxi32.vvalue[j] = message[i*4+j];
+                        auxi32.vvalue[j] = message[i*4+j];//TODO:danger!
                         nchars++;
                         if (nchars == numchars)
                              break;
@@ -278,12 +274,8 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
                         break;
          }
     }
-    else if (strcmp(bar,"BAR0")){
-    }
-    free(bar);
-    free(address_str);
     free(message);
-    *nbytesTransfered = nchars;
+    *nbytesTransfered = nchars-1;
     return status;
 }
 
@@ -321,45 +313,36 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     if (gotEom) *gotEom = 0;
 /**-->**/
     
+    if(data == 	NULL)
+         return asynError;
+
     int i = 0;
     int j = 0;
-    char *bar = (char*)malloc(sizeof(char)*4);
-    char *address_str = (char*)malloc(sizeof(char)*4);
-    char *answer = (char*)malloc(sizeof(char)*maxchars);
 
-    int address;
+    uint32_t *address;
     int nchars = 0;
 
-    for(i=0;i<4;i++)
-        bar[i] = data[i];
-    for(i=0;i<4;i++)
-        address_str[i] = data[i+4];
     i = 0;
-    address = atoi(address_str);
-    printf("reading %s @ %s %d  \n",bar,address_str,address);
+    address = (uint32_t*)pasynUser->drvUser;
     
-    free(address_str);
-    if (strcmp(bar,"BAR2") == 0){
+    if (pasynUser->reason == bar2){
          
-         uint32_t *sdram = (uint32_t*)pvt->bar[2] + address;
+         uint32_t *sdram = (uint32_t*)pvt->bar[2] + *address;
          unsigned_int_32_value auxi32;
          while(1){
                    auxi32.ui32value = sdram[i];
                    for(j=0;j < 4;j++){
                         printf("%c\n",auxi32.vvalue[j]);
-                        answer[i*4+j] = auxi32.vvalue[j];
+                        data[i*4+j] = auxi32.vvalue[j];//TODO:danger!
                         nchars++;
-                        if (nchars == maxchars)
+                        if (nchars >= maxchars)
                              break;
                    }
-                   if (nchars == maxchars)
+                   if (nchars >= maxchars)
                         break;
                    i++;
          }
     }
-    free(data);
-    data = answer;
-    free(bar);
     
     //TODO:check correctness
 
@@ -548,19 +531,15 @@ drvPcieDMAConfigure(const char *portName,
         pcie_dma_pvt_Cleanup(pvt);
         return -1;
     }
+    uint32_t *address = (uint32_t*)malloc(sizeof(uint32_t));
+    *address = 2;
     int n=1;
     int goteom=1;
-    char *data = "BAR20000HELLO WORLD" ;
-    char *answer = (char*)malloc(sizeof(char)*8);
-    answer[0]='B';
-    answer[1]='A';
-    answer[2]='R';
-    answer[3]='2';
-    answer[4]='0';
-    answer[5]='0';
-    answer[6]='0';
-    answer[7]='0';
+    char *data = "HELLO WORLD" ;
+    char *answer = (char*)malloc(sizeof(char)*12);
+    pvt->pasynUser->reason = bar2;
     printf("write test\n");
+    pvt->pasynUser->drvUser = address;
     pasynOctet->write(pvt,pvt->pasynUser,data,11,&n);
     printf("read test\n");
     pasynOctet->read(pvt,pvt->pasynUser,answer,11,&n,&goteom);
