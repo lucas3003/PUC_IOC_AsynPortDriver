@@ -10,3 +10,19 @@ typedef enum FpgaPcieParam_t {
 	dbtest,
     FpgaPcieLastParam,
 } FpgaPcieParam_t;
+
+#ifndef DRVASYNIPPORT_H
+#define DRVASYNIPPORT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif  /* __cplusplus */
+
+int drvPcieDMAConfigure(const char *portName, const char *hostInfo,
+                           unsigned int priority, int noAutoConnect,
+                           int noProcessEos);
+
+#ifdef __cplusplus
+}
+#endif  /* __cplusplus */
+#endif  /* DRVASYNIPPORT_H */

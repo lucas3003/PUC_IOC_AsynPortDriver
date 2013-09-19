@@ -1,3 +1,4 @@
 include "base.dbd"
 include "Frontend.dbd"
 include "drvPcieDMA.dbd"
+include "PCIeFpga.dbd"

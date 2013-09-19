@@ -17,8 +17,9 @@ PUC_registerRecordDeviceDriver pdbbase
 ##devFrontendConfigure("1", "$(uCIP)", 0x1);
 ##dbLoadRecords("db/frontend.db","user=rootHost, PORT=1, TIMEOUT=5")
 #drvAsynSerialPortConfigure("test", "/dev/ttyACM0",0,0,0)
-drvPcieDMAConfigure(1,0,1,1,1)
-#dbLoadRecords("db/fpgapcietest.db","user=rootHost, PORT=1, TIMEOUT=5")
+dbLoadRecords("db/fpgapcie.db","user=rootHost, PORT=HELLO, TIMEOUT=5")
+drvPcieDMAConfigure("HELLO",0,1,1,1)
+devPCIeFPGAConfigure(2, "HELLO")
 cd ${TOP}/iocBoot/${IOC}
 iocInit
 

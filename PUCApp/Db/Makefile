@@ -16,7 +16,7 @@ include $(TOP)/configure/CONFIG
 #DB += write.db
 #DB += curve.db
 #DB += frontend.db
-DB += fpgapcietest.db
+DB += fpgapcie.db
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
