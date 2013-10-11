@@ -4,7 +4,15 @@
 #include <epicsStdio.h>
 #include "asynDriver.h"
 /** Number of asyn parameters (asyn commands) this driver supports. */
-#define FRONTEND_N_PARAMS 9
+#define FRONTEND_N_PARAMS 10
+#define FPGA_SINGLE_N_PARAMS 2
+#define FPGA_CURVE_N_PARAMS 2
+
+typedef enum DeviceType_t {
+	FPGA_CURVE,
+	FPGA_SINGLE_DATA,
+	FRONTEND
+} DeviceType_t;	
 
 /** Specific asyn commands for this support module. These will be used and
  * managed by the parameter library (part of areaDetector). */
@@ -39,4 +47,31 @@ static FrontendParamStruct FrontendParam[FRONTEND_N_PARAMS] = {
 	{c1_switchstate, "S_State"},
 };
 
-asynStatus frontendparamProcess(asynUser *pasynUser, char *pstring, const char *drvInfo,const char **pptypeName, size_t *psize);
+typedef enum FpgaSingleParam_t {
+	test_sdram,
+	FpgaLastParam
+} FpgaSingleParam_t;
+
+typedef struct {
+	FpgaSingleParam_t paramEnum;
+	char *paramString;
+}FpgaSingleParamStruct;
+
+static FpgaSingleParamStruct FpgaSingleParam[FPGA_SINGLE_N_PARAMS] = {
+	{test_sdram, "Test_Sdram"}
+};
+
+typedef enum FpgaCurveParam_t {
+	test_curve,
+	FpgaCurveLastParam
+} FpgaCurveParam_t;
+
+typedef struct {
+	FpgaCurveParam_t paramEnum;
+	char *paramString;
+}FpgaCurveParamStruct;
+
+static FpgaCurveParamStruct FpgaCurveParam[FPGA_CURVE_N_PARAMS] = {
+	{test_curve, "Test_Curve"}
+};
+

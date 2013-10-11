@@ -30,7 +30,6 @@ PUC_SRCS += PUC_registerRecordDeviceDriver.cpp
 PUC_SRCS += devFrontend.c
 PUC_SRCS += sllp_client.c
 PUC_SRCS += sendrecvlib.c
-PUC_SRCS += frontendRecordParams.c
 
 
 # Build the main IOC entry point on workstation OSs.

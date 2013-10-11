@@ -413,7 +413,7 @@ static struct iocshVarDef vardefs[] = {
 
 int PUC_registerRecordDeviceDriver(DBBASE *pbase)
 {
-    const char *bldTop = "/home/igor/frontend_puc/merged/sllp_epics";
+    const char *bldTop = "/home/igor/frontend_puc/sllp_epics";
     const char *envTop = getenv("TOP");
 
     if (envTop && strcmp(envTop, bldTop)) {

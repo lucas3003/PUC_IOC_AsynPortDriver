@@ -1,0 +1,16 @@
+record(ai, "BPM:FPGA$(PORT):test:read")
+{
+	field(DTYP, "asynInt32")
+	field(DESC, "Temperature setpoint1")
+	field(SCAN,"$(SCAN=1 second)")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))Test_Sdram")
+	field(LINR, "LINEAR")
+}
+record(ao, "BPM:FPGA$(PORT):test:write")
+{
+	field(DTYP, "asynInt32")
+	field(DESC, "Temperature setpoint1")
+	field(SCAN,"Passive")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))Test_Sdram")
+	field(LINR, "LINEAR")
+}

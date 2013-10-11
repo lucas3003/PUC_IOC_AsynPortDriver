@@ -58,7 +58,6 @@ typedef struct FrontendPvt {
     asynInterface  asynInt32;
     asynInterface  asynFloat64;
     asynInterface  asynDrvUser;
-    asynInterface  asynInt32Array;
 
     unsigned long commandCount;
     unsigned long setpointUpdateCount;
@@ -70,7 +69,6 @@ typedef struct FrontendPvt {
 
     sllp_client_t *sllp;
     struct sllp_vars_list *vars;
-    struct sllp_curves_list *vars_curve;
 
     DeviceType_t data_type;
 } FrontendPvt;
@@ -233,11 +231,11 @@ int32ArrayWrite(void *pvt, asynUser *pasynUser, epicsInt32 *value, size_t neleme
 	int i;
 
 	for(i=0;i<nelements;i++)
-		ui32v[i].ui32value = (uint32_t) value[i];
+		ui32v->ui32value[i] = (uint32_t) value[i];
 
-	struct sllp_curve_info * var = &ppvt->vars_curve->list[pasynUser->reason];
+	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	if(sllp_send_curve_block(ppvt->sllp, var, 0, ui32v[0].vvalue)!=SLLP_SUCCESS)
+	if(sllp_send_curve_block(ppvt->sllp, var, 0, (ui32v.vvalue))!=SLLP_SUCCESS)
 	{
     		if( pasynOctetSyncIO->connect(ppvt->serverAddress, -1, &ppvt->pasynUser, NULL) != asynSuccess)
 			printf("SERVER DISCONNECTED\n");
@@ -249,20 +247,20 @@ static asynStatus
 int32ArrayRead(void *drvPvt, asynUser *pasynUser,epicsInt32 *value, size_t nelements, size_t *nIn){
 
 	int i;
-	FrontendPvt *ppvt = (FrontendPvt *)drvPvt;
+	FrontendPvt *ppvt = (FrontendPvt *)pvt;
 
 	unsigned_int_32_value *ui32v = callocMustSucceed(nelements, sizeof(unsigned_int_32_value),"unsigned_int_32_value");
 	
-	struct sllp_curve_info * var = &ppvt->vars_curve->list[pasynUser->reason];
+	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
-	if((sllp_request_curve_block(ppvt->sllp, var, 0, (ui32v[0].vvalue)))!=SLLP_SUCCESS)
+	if((sllp_request_curve_block(ppvt->sllp, var, 0, (ui32v.vvalue)))!=SLLP_SUCCESS)
 	{
     		if( pasynOctetSyncIO->connect(ppvt->serverAddress, -1, &ppvt->pasynUser, NULL) != asynSuccess)
 			printf("SERVER DISCONNECTED\n");
 		return asynError;
 	}
 	for(i=0; i<nelements; i++)
-		value[i] = (epicsInt32) ui32v[i].ui32value;
+		value[i] = (epicsInt32) (ui32v.ui32value)[i];
 
 	return asynSuccess;
 }
@@ -394,8 +392,6 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
     drvAsynIPPortConfigure(lowerName, host, priority, 0, 1);
     status = pasynOctetSyncIO->connect(lowerName, -1, &ppvt->pasynUser, NULL);
     ppvt->serverAddress = lowerName;
-    printf("connect to \"%s\"\n", lowerName);
-    printf("connect to \"%s\"\n", host);
     if (status != asynSuccess) {
         printf("Can't connect to \"%s\"\n", lowerName);
         return -1;
@@ -427,10 +423,8 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
         return asynError;
     }
 
-    int var_list_errs;
-    if ((sllp_get_vars_list(ppvt->sllp, &ppvt->vars)!=SLLP_SUCCESS)&&(sllp_get_curves_list(ppvt->sllp, &ppvt->vars_curve)!=SLLP_SUCCESS)){
+    if (sllp_get_vars_list(ppvt->sllp, &ppvt->vars)!=SLLP_SUCCESS){
         printf("Variable listing error\n");
-	return asynError;
     }
 
     #ifdef DEBUG
@@ -488,17 +482,6 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
         printf("Can't register asynFloat64 support.\n");
         return -1;
     }
-
-    ppvt->asynInt32Array.interfaceType = asynInt32ArrayType;
-    ppvt->asynInt32Array.pinterface = &int32ArrayMethods;
-    ppvt->asynInt32Array.drvPvt = ppvt;
-    status = pasynManager->registerInterface(portName, &ppvt->asynInt32Array);
-    if (status != asynSuccess) {
-        printf("Can't register asynFloat64 support.\n");
-        return -1;
-    }
-
-
 
     #ifdef DEBUG
     printf("Configuration succeeded\n");

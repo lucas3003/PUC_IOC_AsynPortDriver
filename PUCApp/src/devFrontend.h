@@ -17,7 +17,7 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-epicsShareFunc int devFrontendConfigure(const char *portName, const char *hostInfo,  int priority);
+epicsShareFunc int devFrontendConfigure(const char *portName, const char *hostInfo,  int priority, const char *dataType);
 
 #ifdef __cplusplus
 }
