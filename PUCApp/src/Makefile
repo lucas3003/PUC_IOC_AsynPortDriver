@@ -28,7 +28,6 @@ PUC_DBD += Frontend.dbd
 # PUC_registerRecordDeviceDriver.cpp derives from PUC.dbd
 PUC_SRCS += PUC_registerRecordDeviceDriver.cpp
 PUC_SRCS += devFrontend.c
-PUC_SRCS += sllp_client.c
 PUC_SRCS += sendrecvlib.c
 
 
@@ -42,7 +41,7 @@ PUC_SRCS_vxWorks += -nil-
 # Finally link to the EPICS Base libraries
 PUC_LIBS += $(EPICS_BASE_IOC_LIBS)
 PUC_LIBS += asyn
-
+PUC_SYS_LIBS += sllp
 
 #===========================
 

@@ -10,7 +10,6 @@ record(ao, "BPM:FPGA$(PORT):test:write")
 {
 	field(DTYP, "asynInt32")
 	field(DESC, "Temperature setpoint1")
-	field(SCAN,"Passive")
-	field(INP, "@asyn($(PORT),0,$(TIMEOUT))Test_Sdram")
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))Test_Sdram")
 	field(LINR, "LINEAR")
 }

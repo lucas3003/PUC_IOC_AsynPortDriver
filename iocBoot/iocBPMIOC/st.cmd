@@ -6,8 +6,8 @@
 #epicsEnvSet("uCIP","$(uCIP=localhost:6791)")
 epicsEnvSet("uCIP","$(uCIP=10.0.17.32:6791)")
 
-epicsEnvSet("fpgahardwarecontroller","$(fpgahardwarecontroller=10.0.18.48:7000)")
-epicsEnvSet("fpgahardwarecontrollercurve","$(fpgahardwarecontrollercurve=10.0.18.48:7001)")
+epicsEnvSet("fpgahardwarecontroller","$(fpgahardwarecontroller=127.0.0.1:7000)")
+epicsEnvSet("fpgahardwarecontrollercurve","$(fpgahardwarecontrollercurve=127.0.0.1:7001)")
 < envPaths
 
 cd ${TOP}
@@ -24,7 +24,6 @@ PUC_registerRecordDeviceDriver pdbbase
 
 devFrontendConfigure("2", "$(fpgahardwarecontroller)", 0x2,"fpga single data");
 dbLoadRecords("db/fpga.db","user=rootHost, PORT=2, TIMEOUT=5")
-
 
 devFrontendConfigure("3", "$(fpgahardwarecontrollercurve)", 0x3,"fpga curve");
 dbLoadRecords("db/fpga_curve.db","user=rootHost, PORT=3, TIMEOUT=5")

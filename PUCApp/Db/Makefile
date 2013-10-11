@@ -17,6 +17,7 @@ include $(TOP)/configure/CONFIG
 #DB += curve.db
 DB += frontend.db
 DB += fpga.db
+DB += fpga_curve.db
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
 # <anyname>_template = <templatename>

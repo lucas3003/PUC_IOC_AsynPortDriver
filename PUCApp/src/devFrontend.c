@@ -1,6 +1,6 @@
-/* 
+/*
  * Support for CAEN A2620 Power Supplies
- * 
+ *
  * Author: W. Eric Norum
  * "2011/02/18 23:15:06 (UTC)"
  *
@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include "sllp_client.h"
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsString.h>
@@ -201,7 +201,7 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 
 	uint8_t *val;
 	val = (uint8_t*) malloc(4*sizeof(char));
-	
+
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
 	if((sllp_read_var(ppvt->sllp, var, val))!=SLLP_SUCCESS)
@@ -214,9 +214,9 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 
 	ui32v.ui32value=0;
 	ui32v.vvalue[0] = val[0];
-	
+
 	*value = (epicsInt32) ui32v.ui32value;
-	free(val);	
+	free(val);
 	return asynSuccess;
 }
 
@@ -252,7 +252,7 @@ int32ArrayRead(void *drvPvt, asynUser *pasynUser,epicsInt32 *value, size_t nelem
 	FrontendPvt *ppvt = (FrontendPvt *)drvPvt;
 
 	unsigned_int_32_value *ui32v = callocMustSucceed(nelements, sizeof(unsigned_int_32_value),"unsigned_int_32_value");
-	
+
 	struct sllp_curve_info * var = &ppvt->vars_curve->list[pasynUser->reason];
 
 	if((sllp_request_curve_block(ppvt->sllp, var, 0, (ui32v[0].vvalue)))!=SLLP_SUCCESS)
@@ -267,8 +267,8 @@ int32ArrayRead(void *drvPvt, asynUser *pasynUser,epicsInt32 *value, size_t nelem
 	return asynSuccess;
 }
 
-	
-static asynInt32Array int32ArrayMethods = { int32ArrayWrite, int32ArrayRead }; 
+
+static asynInt32Array int32ArrayMethods = { int32ArrayWrite, int32ArrayRead };
 
 
 /*
@@ -334,7 +334,7 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 	for(i=0; i < 3; i++)
 	{
         raw = raw << 8;
-		raw += val[i];			
+		raw += val[i];
 	}
 
     printf("Raw = %u\n", raw);
@@ -351,7 +351,7 @@ float64Read(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
 
 static asynFloat64 float64Methods = { float64Write, float64Read };
 
-epicsShareFunc int 
+epicsShareFunc int
 //devFrontendConfigure(const char *portName, const char *hostInfo, int flags, int priority)
 devFrontendConfigure(const char *portName, const char *hostInfo, int priority, const char *dataType)
 {
@@ -369,17 +369,17 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
     if (priority == 0) priority = epicsThreadPriorityMedium;
 
     /*set data type*/
-    if(epicsStrCaseCmp("fpga curve",dataType)){
+    if(epicsStrCaseCmp("fpga curve",dataType) == 0){
          ppvt->data_type = FPGA_CURVE;
     }
-    else if(epicsStrCaseCmp("fpga single data",dataType)){
+    else if(epicsStrCaseCmp("fpga single data",dataType) == 0){
          ppvt->data_type = FPGA_SINGLE_DATA;
     }
-    else if(epicsStrCaseCmp("front end",dataType)){
+    else if(epicsStrCaseCmp("front end",dataType) == 0){
          ppvt->data_type = FRONTEND;
     }
     else
-         return asynError;	
+         return asynError;
 
     /*
      * Create the port that we'll use for I/O.
@@ -415,7 +415,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
     #endif
 
     //ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
-    
+
     if (!ppvt->sllp)
     {
         printf("SLLP fail\n");
@@ -451,7 +451,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
         return -1;
     }
 
-  
+
     /*
      * Advertise our interfaces
      */
@@ -479,7 +479,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
         printf("Can't register asynFloat64 support.\n");
         return -1;
     }
-    
+
     ppvt->asynDrvUser.interfaceType = asynDrvUserType;
     ppvt->asynDrvUser.pinterface = &drvUser;
     ppvt->asynDrvUser.drvPvt = ppvt;
@@ -503,7 +503,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
     #ifdef DEBUG
     printf("Configuration succeeded\n");
     #endif
-    
+
     return 0;
 }
 
