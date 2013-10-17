@@ -9,7 +9,7 @@ typedef union DV {
 } double_value;
 
 typedef union FV {
-	uint8_t vvalue[8];
+	uint8_t vvalue[4];
 	float fvalue;
 } float_value;
 
@@ -24,7 +24,7 @@ typedef union UI8V {
 } unsigned_int_8_value;
 
 typedef union UI32V {
-	uint8_t vvalue[1];
+	uint8_t vvalue[4];
 	uint32_t ui32value;
 } unsigned_int_32_value;
 #endif

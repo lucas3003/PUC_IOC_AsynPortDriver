@@ -63,6 +63,7 @@ static FpgaSingleParamStruct FpgaSingleParam[FPGA_SINGLE_N_PARAMS] = {
 
 typedef enum FpgaCurveParam_t {
 	test_curve,
+	test_curve_dma,
 	FpgaCurveLastParam
 } FpgaCurveParam_t;
 
@@ -72,6 +73,7 @@ typedef struct {
 }FpgaCurveParamStruct;
 
 static FpgaCurveParamStruct FpgaCurveParam[FPGA_CURVE_N_PARAMS] = {
-	{test_curve, "Test_Curve"}
+	{test_curve, "Test_Curve"},
+	{test_curve_dma, "Test_Curve_Dma"}
 };
 

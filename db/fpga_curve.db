@@ -1,17 +1,32 @@
 record(waveform, "BPM:FPGA$(PORT):test:curve:read")
 {
     field(PINI, "1")
-    field(DTYP, "asynFloat32ArrayIn")
+    field(DTYP, "asynInt32ArrayIn")
     field(INP,  "@asyn($(PORT),0,5)Test_Curve")
-    field(FTVL, "FLOAT")
+    field(FTVL, "ULONG")
     field(NELM, "4096")
     field(SCAN, "1 second")
 }
-record(waveform, "BPM:FPGA$(PORT):test:curve:read")
+record(waveform, "BPM:FPGA$(PORT):test:curve:write")
 {
-    field(DTYP, "asynFloat32ArrayOut")
+    field(DTYP, "asynInt32ArrayOut")
     field(INP,  "@asyn($(PORT),0,5)Test_Curve")
-    field(FTVL, "FLOAT")
+    field(FTVL, "ULONG")
+    field(NELM, "4096")
+}
+record(waveform, "BPM:FPGA$(PORT):test:curve:dma:read")
+{
+    field(PINI, "1")
+    field(DTYP, "asynInt32ArrayIn")
+    field(INP,  "@asyn($(PORT),0,5)Test_Curve_Dma")
+    field(FTVL, "ULONG")
     field(NELM, "4096")
     field(SCAN, "1 second")
+}
+record(waveform, "BPM:FPGA$(PORT):test:curve:dma:write")
+{
+    field(DTYP, "asynInt32ArrayOut")
+    field(INP,  "@asyn($(PORT),0,5)Test_Curve_Dma")
+    field(FTVL, "ULONG")
+    field(NELM, "4096")
 }

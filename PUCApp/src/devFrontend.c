@@ -200,7 +200,7 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 	FrontendPvt *ppvt = (FrontendPvt *)pvt;
 
 	uint8_t *val;
-	val = (uint8_t*) malloc(4*sizeof(char));
+	val = (uint8_t*) malloc(4*sizeof(uint8_t));
 
 	struct sllp_var_info * var = &ppvt->vars->list[pasynUser->reason];
 
@@ -214,6 +214,9 @@ int32Read(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 
 	ui32v.ui32value=0;
 	ui32v.vvalue[0] = val[0];
+	ui32v.vvalue[1] = val[1];
+	ui32v.vvalue[2] = val[2];
+	ui32v.vvalue[3] = val[3];
 
 	*value = (epicsInt32) ui32v.ui32value;
 	free(val);
@@ -404,15 +407,20 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
     free(lowerName);
 
     //TODO:remove!
-    setEpicsuser(ppvt->pasynUser);
-
-    #ifdef BPM
-    printf("BPM\n");
-    ppvt->sllp = sllp_client_new(sendBPM, recvCommandEPICS);
-    #elif defined PUC
-    printf("PUC\n");
-    ppvt->sllp = sllp_client_new(sendPUC, recvCommandEPICS);
-    #endif
+    if(ppvt->data_type == FPGA_SINGLE_DATA){
+         setEpicsuserfpgasg(ppvt->pasynUser);
+         ppvt->sllp = sllp_client_new(sendCommandEPICSsg, recvCommandEPICSsg);
+	 }
+	 else if(ppvt->data_type == FPGA_CURVE){
+         setEpicsuserfpgacurve(ppvt->pasynUser);
+         ppvt->sllp = sllp_client_new(sendCommandEPICScurve, recvCommandEPICScurve);
+	 }
+	 else if(ppvt->data_type == FRONTEND){
+         setEpicsuserfrontend(ppvt->pasynUser);
+         ppvt->sllp = sllp_client_new(sendCommandEPICSfrontend, recvCommandEPICSfrontend);
+	 }
+	 else
+         return asynError;
 
     //ppvt->sllp = sllp_client_new(sendCommandepics, recvCommandepics);
 
@@ -423,14 +431,19 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
     }
     enum sllp_err err;
     if (err = sllp_client_init(ppvt->sllp)!=SLLP_SUCCESS){
-	printf("Client initialization error: %d\n",err);
-        return asynError;
+	      printf("Client initialization error: %d\n",err);
+         return asynError;
     }
 
     int var_list_errs;
-    if ((sllp_get_vars_list(ppvt->sllp, &ppvt->vars)!=SLLP_SUCCESS)&&(sllp_get_curves_list(ppvt->sllp, &ppvt->vars_curve)!=SLLP_SUCCESS)){
-        printf("Variable listing error\n");
-	return asynError;
+	 if((ppvt->data_type == FPGA_CURVE) && ((sllp_get_curves_list(ppvt->sllp, &ppvt->vars_curve))!=SLLP_SUCCESS)){
+		 printf("Curves listing error\n");
+		 return asynError;
+	 }
+
+	 else if ((sllp_get_vars_list(ppvt->sllp, &ppvt->vars))!=SLLP_SUCCESS){
+			printf("Variable listing error\n");
+			return asynError;
     }
 
     #ifdef DEBUG
@@ -485,7 +498,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
     ppvt->asynDrvUser.drvPvt = ppvt;
     status = pasynManager->registerInterface(portName, &ppvt->asynDrvUser);
     if (status != asynSuccess) {
-        printf("Can't register asynFloat64 support.\n");
+        printf("Can't register asynDrvUser support.\n");
         return -1;
     }
 
@@ -494,7 +507,7 @@ devFrontendConfigure(const char *portName, const char *hostInfo, int priority, c
     ppvt->asynInt32Array.drvPvt = ppvt;
     status = pasynManager->registerInterface(portName, &ppvt->asynInt32Array);
     if (status != asynSuccess) {
-        printf("Can't register asynFloat64 support.\n");
+        printf("Can't register asynInt32 support.\n");
         return -1;
     }
 

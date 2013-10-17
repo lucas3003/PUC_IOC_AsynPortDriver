@@ -15,16 +15,25 @@
 #include "asynOctetSyncIO.h"
 #include "devFrontend.h"
 
-int sendCommandEPICS(uint8_t *data, uint32_t count);
 
-int sendBPM(uint8_t *data, uint32_t *count);
+int sendCommandEPICSsg(uint8_t *data, uint32_t *count);
 
-int sendPUC(uint8_t *data, uint32_t *count);
+int recvCommandEPICSsg(uint8_t *data, uint32_t *count);
 
-int recvCommandEPICS(uint8_t *data, uint32_t *count);
+int sendCommandEPICScurve(uint8_t *data, uint32_t *count);
+
+int recvCommandEPICScurve(uint8_t *data, uint32_t *count);
+
+int recvCommandEPICSfrontend(uint8_t *data, uint32_t *count);
+
+int sendCommandEPICSfrontend(uint8_t *data, uint32_t *count);
 
 int sendCommandtest(uint8_t *data, uint32_t *count);
 
 int receiveCommandtest(uint8_t *data, uint32_t *count);
 
-void setEpicsuser(asynUser *us);
+void setEpicsuserfpgasg(asynUser *us);
+
+void setEpicsuserfrontend(asynUser *us);
+
+void setEpicsuserfpgacurve(asynUser *us);

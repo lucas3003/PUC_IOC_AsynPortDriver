@@ -4,7 +4,7 @@
 ## everywhere it appears in this file
 
 #epicsEnvSet("uCIP","$(uCIP=localhost:6791)")
-epicsEnvSet("uCIP","$(uCIP=10.0.17.32:6791)")
+epicsEnvSet("uCIP","$(uCIP=127.0.0.1:6791)")
 
 epicsEnvSet("fpgahardwarecontroller","$(fpgahardwarecontroller=127.0.0.1:7000)")
 epicsEnvSet("fpgahardwarecontrollercurve","$(fpgahardwarecontrollercurve=127.0.0.1:7001)")
@@ -20,13 +20,12 @@ PUC_registerRecordDeviceDriver pdbbase
 
 #devFrontendConfigure("1", "$(uCIP)", 0x1,"front end");
 #dbLoadRecords("db/frontend.db","user=rootHost, PORT=1, TIMEOUT=5")
-#drvAsynSerialPortConfigure("test", "/dev/ttyACM0",0,0,0)
 
 devFrontendConfigure("2", "$(fpgahardwarecontroller)", 0x2,"fpga single data");
-dbLoadRecords("db/fpga.db","user=rootHost, PORT=2, TIMEOUT=5")
+dbLoadRecords("db/fpga.db","user=rootHost, PORT=2, TIMEOUT=15")
 
 devFrontendConfigure("3", "$(fpgahardwarecontrollercurve)", 0x3,"fpga curve");
-dbLoadRecords("db/fpga_curve.db","user=rootHost, PORT=3, TIMEOUT=5")
+dbLoadRecords("db/fpga_curve.db","user=rootHost, PORT=3, TIMEOUT=15")
 
 cd ${TOP}/iocBoot/${IOC}
 iocInit
