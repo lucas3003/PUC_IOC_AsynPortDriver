@@ -18,14 +18,14 @@ PUC_registerRecordDeviceDriver pdbbase
 
 # Load record instances
 
-#devFrontendConfigure("1", "$(uCIP)", 0x1,"front end");
-#dbLoadRecords("db/frontend.db","user=rootHost, PORT=1, TIMEOUT=5")
+devFrontendConfigure("1", "$(uCIP)", 0x1,"front end");
+dbLoadRecords("db/frontend.db","user=rootHost, PORT=1, TIMEOUT=5")
 
-devFrontendConfigure("2", "$(fpgahardwarecontroller)", 0x2,"fpga single data");
-dbLoadRecords("db/fpga.db","user=rootHost, PORT=2, TIMEOUT=15")
+#devFrontendConfigure("2", "$(fpgahardwarecontroller)", 0x2,"fpga single data");
+#dbLoadRecords("db/fpga.db","user=rootHost, PORT=2, TIMEOUT=15")
 
-devFrontendConfigure("3", "$(fpgahardwarecontrollercurve)", 0x3,"fpga curve");
-dbLoadRecords("db/fpga_curve.db","user=rootHost, PORT=3, TIMEOUT=15")
+#devFrontendConfigure("3", "$(fpgahardwarecontrollercurve)", 0x3,"fpga curve");
+#dbLoadRecords("db/fpga_curve.db","user=rootHost, PORT=3, TIMEOUT=15")
 
 cd ${TOP}/iocBoot/${IOC}
 iocInit

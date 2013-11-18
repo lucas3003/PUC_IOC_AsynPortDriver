@@ -17,6 +17,9 @@ typedef enum DeviceType_t {
 /** Specific asyn commands for this support module. These will be used and
  * managed by the parameter library (part of areaDetector). */
 typedef enum FrontendParam_t {
+	c1_switchstate      /** Switch state*/,
+	att1					  /*attenuator 1*/,
+	att2					  /*attenuator 2*/,
 	t_setpoint1         /** Temperature setpoint*/,
 	t_setpoint2         /** Temperature setpoint*/,
 	t_setpoint3         /** Temperature setpoint*/,
@@ -25,7 +28,6 @@ typedef enum FrontendParam_t {
 	t_sensor2 /** Temperature sensor 2*/,	
 	t_sensor3 /** Temperature sensor 3*/,	
 	t_sensor4    /** Temeperature sensor 4*/,	
-	c1_switchstate      /** Switch state*/,
 				
     FrontendLastParam
 } FrontendParam_t;
@@ -36,6 +38,9 @@ typedef struct{
 }FrontendParamStruct;
 
 static FrontendParamStruct FrontendParam[FRONTEND_N_PARAMS] = {
+	{c1_switchstate, "S_State"},
+	{att1,           "attenuator1"},
+	{att2,           "attenuator2"},
 	{t_setpoint1,      "T_SetPoint1"},
 	{t_setpoint2,      "T_SetPoint2"},
 	{t_setpoint3,      "T_SetPoint3"},
@@ -44,7 +49,6 @@ static FrontendParamStruct FrontendParam[FRONTEND_N_PARAMS] = {
 	{t_sensor2,  "T_Sensor2"},
 	{t_sensor3,   "T_Sensor3"},
 	{t_sensor4, "T_Sensor4"},
-	{c1_switchstate, "S_State"},
 };
 
 typedef enum FpgaSingleParam_t {
