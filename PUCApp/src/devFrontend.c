@@ -26,7 +26,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "sllp_client.h"
+#include <sllp_client.h>
+#include <sllp_var.h>
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsString.h>
@@ -69,8 +70,8 @@ typedef struct FrontendPvt {
     char *serverAddress;
 
     sllp_client_t *sllp;
-    struct sllp_vars_list *vars;
-    struct sllp_curves_list *vars_curve;
+    struct sllp_var_info_list *vars;
+    struct sllp_curve_info_list *vars_curve;
 
     DeviceType_t data_type;
 } FrontendPvt;

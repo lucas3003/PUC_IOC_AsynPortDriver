@@ -69,7 +69,30 @@ record(ao, "BPM:FRONTEND$(PORT):setpoint3:write")
 	field(LINR, "NO CONVERSION")
 	field(PINI, "YES")
 }
-
+record(ai, "BPM:FRONTEND$(PORT):attenuator1:getValue")
+{
+	field(DTYP, "asynFloat64")
+	field(SCAN,"$(SCAN=1 second)")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))attenuator1")
+	field(LINR, "LINEAR")
+}
+record(ao, "BPM:FRONTEND$(PORT):attenuator1:setValue")
+{
+	field(DTYP, "asynFloat64")
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))attenuator1")
+}
+record(ai, "BPM:FRONTEND$(PORT):attenuator2:getValue")
+{
+	field(DTYP, "asynFloat64")
+	field(SCAN,"$(SCAN=1 second)")
+	field(INP, "@asyn($(PORT),0,$(TIMEOUT))attenuator2")
+	field(LINR, "LINEAR")
+}
+record(ao, "BPM:FRONTEND$(PORT):attenuator2:setValue")
+{
+	field(DTYP, "asynFloat64")
+	field(OUT, "@asyn($(PORT),0,$(TIMEOUT))attenuator2")
+}
 record(ai, "BPM:FRONTEND$(PORT):setpoint4:read")
 {
 	field(DTYP, "asynFloat64")

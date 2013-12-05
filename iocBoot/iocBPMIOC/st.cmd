@@ -4,7 +4,7 @@
 ## everywhere it appears in this file
 
 #epicsEnvSet("uCIP","$(uCIP=localhost:6791)")
-epicsEnvSet("uCIP","$(uCIP=127.0.0.1:6791)")
+epicsEnvSet("uCIP","$(uCIP=10.0.17.200:6791)")
 
 epicsEnvSet("fpgahardwarecontroller","$(fpgahardwarecontroller=127.0.0.1:7000)")
 epicsEnvSet("fpgahardwarecontrollercurve","$(fpgahardwarecontrollercurve=127.0.0.1:7001)")
